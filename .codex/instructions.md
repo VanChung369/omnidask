@@ -12,6 +12,7 @@ Omnidask is a small full-stack workspace with a React/Vite frontend and a Go bac
 - `cmd/server/main.go` is the Go backend entrypoint placeholder.
 - `internal/` is reserved for future Go application packages.
 - `db/` is reserved for database assets or migrations.
+- Backend stack uses chi, pgx/v5, sqlc, golang-migrate migrations, coder/websocket, PostgreSQL jobs/outbox workers, S3-compatible storage, JWT, and `log/slog`.
 - `Dockerfile`, `docker-compose.yml`, and `Makefile` are present but should remain minimal until implementation is requested.
 
 ## Commands
@@ -25,14 +26,15 @@ npm run build
 npm run lint
 ```
 
-Run Go commands from the repository root when Go setup exists:
+Run Go commands from the repository root:
 
 ```powershell
 go run ./cmd/server
 go test ./...
+go run github.com/sqlc-dev/sqlc/cmd/sqlc@latest generate -f db/sqlc.yaml
 ```
 
-Do not add `go.mod`, HTTP routes, database setup, Docker content, or Make targets unless the user explicitly asks for those pieces.
+Do not add Docker content beyond explicit user requests.
 
 ## Working Rules
 

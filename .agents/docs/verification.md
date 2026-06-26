@@ -16,13 +16,19 @@ Use `npm run lint` when changing JavaScript, JSX, or lint configuration.
 
 ## Backend
 
-After Go module setup exists, run from the repository root:
+Run from the repository root:
 
 ```powershell
 go test ./...
 ```
 
-Until `go.mod` exists, do not force Go verification for placeholder-only edits.
+Run sqlc generation after changing SQL queries or migrations:
+
+```powershell
+go run github.com/sqlc-dev/sqlc/cmd/sqlc@latest generate -f db/sqlc.yaml
+```
+
+For local smoke checks, `go run ./cmd/server` should start without `DATABASE_URL`; database-backed jobs and outbox processing start only when PostgreSQL is configured.
 
 ## Documentation
 
