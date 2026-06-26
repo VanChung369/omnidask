@@ -1,0 +1,41 @@
+{
+  "project": "omnidask",
+  "version": 1,
+  "default_language": "vi",
+  "docs_contract": {
+    "root": ".agents/docs",
+    "entrypoint": ".agents/docs/README.md",
+    "required": true
+  },
+  "agents": [
+    {
+      "id": "frontend",
+      "name": "Frontend Agent",
+      "scope": ["web"],
+      "responsibilities": ["react", "vite", "ui", "frontend-build"]
+    },
+    {
+      "id": "backend",
+      "name": "Backend Agent",
+      "scope": ["cmd", "internal", "db"],
+      "responsibilities": ["go", "api", "backend-entrypoint"]
+    },
+    {
+      "id": "devops",
+      "name": "DevOps Agent",
+      "scope": ["Dockerfile", "docker-compose.yml", "Makefile"],
+      "responsibilities": ["docker", "compose", "make", "runtime-commands"]
+    },
+    {
+      "id": "docs",
+      "name": "Docs Agent",
+      "scope": [".codex", ".agents", "README.md", "web/README.md"],
+      "responsibilities": ["documentation", "repo-guidance", "handoff-notes"]
+    }
+  ],
+  "rules": {
+    "minimal_by_default": true,
+    "avoid_unrequested_setup": true,
+    "protect_user_changes": true
+  }
+}
