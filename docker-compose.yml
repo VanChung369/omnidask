@@ -49,6 +49,24 @@ services:
       "
     restart: "no"
 
+  migrate:
+    image: migrate/migrate:v4.17.1
+    container_name: omnidask-migrate
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./db/migrations:/migrations
+    command:
+      [
+        "-path",
+        "/migrations",
+        "-database",
+        "${MIGRATE_DATABASE_URL}",
+        "up"
+      ]
+    restart: "no"
+
 volumes:
   postgres_data:
   minio_data:
