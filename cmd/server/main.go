@@ -2,21 +2,15 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
 	"omnidask/internal/app"
-	"omnidask/internal/auth"
 	"omnidask/internal/platform/database"
-	"omnidask/internal/platform/httpx"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
@@ -45,48 +39,7 @@ func main() {
 
 	defer db.Close()
 
-	router := chi.NewRouter()
-	router.Use(middleware.RequestID)
-	router.Use(middleware.RealIP)
-	router.Use(middleware.Recoverer)
-
-	tokenManager := auth.NewTokenManager(
-		config.JWTSecret,
-		config.AccessTokenTTL,
-	)
-
-	authRepository := auth.NewRepository(db)
-
-	authService := auth.NewService(
-		authRepository,
-		tokenManager,
-	)
-
-	authHandler := auth.NewHandler(authService)
-
-	router.Route("/api/v1/auth", authHandler.Routes)
-
-	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		httpx.WriteJSON(w, http.StatusOK, map[string]string{
-			"status": "ok",
-		})
-	})
-
-	router.Get("/ready", func(w http.ResponseWriter, r *http.Request) {
-		pingCtx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-		defer cancel()
-
-		if err := db.Ping(pingCtx); err != nil {
-			writeJSON(w, http.StatusServiceUnavailable, map[string]string{
-				"status": "database_unavailable",
-			})
-			return
-		}
-
-		writeJSON(w, http.StatusOK, map[string]string{
-			"status": "ready",
-		})
-	})
+	router := app.NewRouter(config, db)
 
 	server := &http.Server{
 		Addr:              config.HTTPAddr,
@@ -118,15 +71,5 @@ func main() {
 
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		slog.Error("graceful shutdown failed", "error", err)
-	}
-
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		slog.Error("write JSON response failed", "error", err)
 	}
 }
