@@ -14,4 +14,4 @@ sqlc:
 
 
 migrate-up:
-	migrate -path db/migrations -database "$(DATABASE_URL)" up
+	docker compose run --rm migrate
