@@ -7,7 +7,9 @@ import (
 	"log/slog"
 	"net/http"
 	"omnidask/internal/app"
+	"omnidask/internal/auth"
 	"omnidask/internal/platform/database"
+	"omnidask/internal/platform/httpx"
 	"os"
 	"os/signal"
 	"syscall"
@@ -48,8 +50,24 @@ func main() {
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Recoverer)
 
+	tokenManager := auth.NewTokenManager(
+		config.JWTSecret,
+		config.AccessTokenTTL,
+	)
+
+	authRepository := auth.NewRepository(db)
+
+	authService := auth.NewService(
+		authRepository,
+		tokenManager,
+	)
+
+	authHandler := auth.NewHandler(authService)
+
+	router.Route("/api/v1/auth", authHandler.Routes)
+
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]string{
+		httpx.WriteJSON(w, http.StatusOK, map[string]string{
 			"status": "ok",
 		})
 	})

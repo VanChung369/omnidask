@@ -8,6 +8,7 @@ package sqlc
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -22,7 +23,12 @@ VALUES (
   $2,
   $3
 )
-RETURNING id, email, display_name, password_hash, avatar_url, status, last_login_at, created_at, updated_at
+RETURNING
+  id,
+  email::text AS email,
+  display_name,
+  status,
+  created_at
 `
 
 type CreateUserParams struct {
@@ -31,24 +37,28 @@ type CreateUserParams struct {
 	PasswordHash string `json:"password_hash"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
+type CreateUserRow struct {
+	ID          uuid.UUID          `json:"id"`
+	Email       string             `json:"email"`
+	DisplayName string             `json:"display_name"`
+	Status      string             `json:"status"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
 	row := q.db.QueryRow(ctx, createUser, arg.Email, arg.DisplayName, arg.PasswordHash)
-	var i User
+	var i CreateUserRow
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
 		&i.DisplayName,
-		&i.PasswordHash,
-		&i.AvatarUrl,
 		&i.Status,
-		&i.LastLoginAt,
 		&i.CreatedAt,
-		&i.UpdatedAt,
 	)
 	return i, err
 }
 
-const createWorkspaceMember = `-- name: CreateWorkspaceMember :one
+const createWorkspaceMember = `-- name: CreateWorkspaceMember :exec
 INSERT INTO workspace_members (
   workspace_id,
   user_id,
@@ -59,26 +69,48 @@ VALUES (
   $2,
   $3
 )
-RETURNING id, workspace_id, user_id, role, status, created_at, updated_at
 `
 
 type CreateWorkspaceMemberParams struct {
-	WorkspaceID pgtype.UUID `json:"workspace_id"`
-	UserID      pgtype.UUID `json:"user_id"`
-	Role        string      `json:"role"`
+	WorkspaceID uuid.UUID `json:"workspace_id"`
+	UserID      uuid.UUID `json:"user_id"`
+	Role        string    `json:"role"`
 }
 
-func (q *Queries) CreateWorkspaceMember(ctx context.Context, arg CreateWorkspaceMemberParams) (WorkspaceMember, error) {
-	row := q.db.QueryRow(ctx, createWorkspaceMember, arg.WorkspaceID, arg.UserID, arg.Role)
-	var i WorkspaceMember
+func (q *Queries) CreateWorkspaceMember(ctx context.Context, arg CreateWorkspaceMemberParams) error {
+	_, err := q.db.Exec(ctx, createWorkspaceMember, arg.WorkspaceID, arg.UserID, arg.Role)
+	return err
+}
+
+const getActiveUserByEmail = `-- name: GetActiveUserByEmail :one
+SELECT
+  id,
+  email::text AS email,
+  display_name,
+  password_hash,
+  status
+FROM users
+WHERE email = $1
+  AND status = 'active'
+`
+
+type GetActiveUserByEmailRow struct {
+	ID           uuid.UUID `json:"id"`
+	Email        string    `json:"email"`
+	DisplayName  string    `json:"display_name"`
+	PasswordHash string    `json:"password_hash"`
+	Status       string    `json:"status"`
+}
+
+func (q *Queries) GetActiveUserByEmail(ctx context.Context, email string) (GetActiveUserByEmailRow, error) {
+	row := q.db.QueryRow(ctx, getActiveUserByEmail, email)
+	var i GetActiveUserByEmailRow
 	err := row.Scan(
 		&i.ID,
-		&i.WorkspaceID,
-		&i.UserID,
-		&i.Role,
+		&i.Email,
+		&i.DisplayName,
+		&i.PasswordHash,
 		&i.Status,
-		&i.CreatedAt,
-		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -112,7 +144,7 @@ FROM users
 WHERE id = $1
 `
 
-func (q *Queries) GetUserByID(ctx context.Context, id pgtype.UUID) (User, error) {
+func (q *Queries) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByID, id)
 	var i User
 	err := row.Scan(
@@ -137,8 +169,8 @@ WHERE workspace_id = $1
 `
 
 type GetWorkspaceMemberParams struct {
-	WorkspaceID pgtype.UUID `json:"workspace_id"`
-	UserID      pgtype.UUID `json:"user_id"`
+	WorkspaceID uuid.UUID `json:"workspace_id"`
+	UserID      uuid.UUID `json:"user_id"`
 }
 
 func (q *Queries) GetWorkspaceMember(ctx context.Context, arg GetWorkspaceMemberParams) (WorkspaceMember, error) {
@@ -174,17 +206,17 @@ ORDER BY w.created_at ASC
 `
 
 type ListUserWorkspacesRow struct {
-	MembershipID      pgtype.UUID `json:"membership_id"`
-	WorkspaceID       pgtype.UUID `json:"workspace_id"`
-	UserID            pgtype.UUID `json:"user_id"`
-	Role              string      `json:"role"`
-	MemberStatus      string      `json:"member_status"`
-	WorkspaceName     string      `json:"workspace_name"`
-	WorkspaceSlug     string      `json:"workspace_slug"`
-	WorkspaceTimezone string      `json:"workspace_timezone"`
+	MembershipID      uuid.UUID `json:"membership_id"`
+	WorkspaceID       uuid.UUID `json:"workspace_id"`
+	UserID            uuid.UUID `json:"user_id"`
+	Role              string    `json:"role"`
+	MemberStatus      string    `json:"member_status"`
+	WorkspaceName     string    `json:"workspace_name"`
+	WorkspaceSlug     string    `json:"workspace_slug"`
+	WorkspaceTimezone string    `json:"workspace_timezone"`
 }
 
-func (q *Queries) ListUserWorkspaces(ctx context.Context, userID pgtype.UUID) ([]ListUserWorkspacesRow, error) {
+func (q *Queries) ListUserWorkspaces(ctx context.Context, userID uuid.UUID) ([]ListUserWorkspacesRow, error) {
 	rows, err := q.db.Query(ctx, listUserWorkspaces, userID)
 	if err != nil {
 		return nil, err
@@ -219,7 +251,7 @@ SET last_login_at = now()
 WHERE id = $1
 `
 
-func (q *Queries) UpdateUserLastLogin(ctx context.Context, id pgtype.UUID) error {
+func (q *Queries) UpdateUserLastLogin(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, updateUserLastLogin, id)
 	return err
 }

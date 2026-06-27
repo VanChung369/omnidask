@@ -9,7 +9,12 @@ VALUES (
   $2,
   $3
 )
-RETURNING *;
+RETURNING
+  id,
+  email::text AS email,
+  display_name,
+  status,
+  created_at;
 
 
 -- name: GetUserByID :one
@@ -23,13 +28,12 @@ SELECT *
 FROM users
 WHERE email = $1;
 
-
 -- name: UpdateUserLastLogin :exec
 UPDATE users
 SET last_login_at = now()
 WHERE id = $1;
 
--- name: CreateWorkspaceMember :one
+-- name: CreateWorkspaceMember :exec
 INSERT INTO workspace_members (
   workspace_id,
   user_id,
@@ -39,8 +43,31 @@ VALUES (
   $1,
   $2,
   $3
-)
-RETURNING *;
+);
+
+
+-- name: GetActiveUserByEmail :one
+SELECT
+  id,
+  email::text AS email,
+  display_name,
+  password_hash,
+  status
+FROM users
+WHERE email = $1
+  AND status = 'active';
+
+
+
+  -- name: GetActiveUserByID :one
+SELECT
+  id,
+  email::text AS email,
+  display_name,
+  status
+FROM users
+WHERE id = $1
+  AND status = 'active';
 
 
 -- name: GetWorkspaceMember :one

@@ -1,5 +1,4 @@
 -- name: CreateWorkspace :one
-
 INSERT INTO workspaces (
   name,
   slug,
@@ -10,11 +9,22 @@ VALUES (
   $2,
   $3
 )
-RETURNING *;
+RETURNING
+  id,
+  name,
+  slug,
+  timezone,
+  created_at;
 
 
 -- name: GetWorkspaceByID :one
-SELECT *
+SELECT
+  id,
+  name,
+  slug,
+  timezone,
+  created_at,
+  updated_at
 FROM workspaces
 WHERE id = $1;
 

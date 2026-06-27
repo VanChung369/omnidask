@@ -8,11 +8,11 @@ package sqlc
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createWorkspace = `-- name: CreateWorkspace :one
-
 INSERT INTO workspaces (
   name,
   slug,
@@ -23,7 +23,12 @@ VALUES (
   $2,
   $3
 )
-RETURNING id, name, slug, timezone, created_at, updated_at
+RETURNING
+  id,
+  name,
+  slug,
+  timezone,
+  created_at
 `
 
 type CreateWorkspaceParams struct {
@@ -32,27 +37,40 @@ type CreateWorkspaceParams struct {
 	Timezone string `json:"timezone"`
 }
 
-func (q *Queries) CreateWorkspace(ctx context.Context, arg CreateWorkspaceParams) (Workspace, error) {
+type CreateWorkspaceRow struct {
+	ID        uuid.UUID          `json:"id"`
+	Name      string             `json:"name"`
+	Slug      string             `json:"slug"`
+	Timezone  string             `json:"timezone"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) CreateWorkspace(ctx context.Context, arg CreateWorkspaceParams) (CreateWorkspaceRow, error) {
 	row := q.db.QueryRow(ctx, createWorkspace, arg.Name, arg.Slug, arg.Timezone)
-	var i Workspace
+	var i CreateWorkspaceRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.Slug,
 		&i.Timezone,
 		&i.CreatedAt,
-		&i.UpdatedAt,
 	)
 	return i, err
 }
 
 const getWorkspaceByID = `-- name: GetWorkspaceByID :one
-SELECT id, name, slug, timezone, created_at, updated_at
+SELECT
+  id,
+  name,
+  slug,
+  timezone,
+  created_at,
+  updated_at
 FROM workspaces
 WHERE id = $1
 `
 
-func (q *Queries) GetWorkspaceByID(ctx context.Context, id pgtype.UUID) (Workspace, error) {
+func (q *Queries) GetWorkspaceByID(ctx context.Context, id uuid.UUID) (Workspace, error) {
 	row := q.db.QueryRow(ctx, getWorkspaceByID, id)
 	var i Workspace
 	err := row.Scan(

@@ -9,6 +9,7 @@ import (
 	"context"
 	"net/netip"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -31,7 +32,7 @@ RETURNING id, user_id, refresh_token_hash, user_agent, ip_address, expires_at, r
 `
 
 type CreateAuthSessionParams struct {
-	UserID           pgtype.UUID        `json:"user_id"`
+	UserID           uuid.UUID          `json:"user_id"`
 	RefreshTokenHash string             `json:"refresh_token_hash"`
 	UserAgent        pgtype.Text        `json:"user_agent"`
 	IpAddress        *netip.Addr        `json:"ip_address"`
@@ -69,7 +70,7 @@ WHERE id = $1
   AND expires_at > now()
 `
 
-func (q *Queries) GetActiveAuthSession(ctx context.Context, id pgtype.UUID) (AuthSession, error) {
+func (q *Queries) GetActiveAuthSession(ctx context.Context, id uuid.UUID) (AuthSession, error) {
 	row := q.db.QueryRow(ctx, getActiveAuthSession, id)
 	var i AuthSession
 	err := row.Scan(
@@ -93,7 +94,7 @@ WHERE user_id = $1
   AND revoked_at IS NULL
 `
 
-func (q *Queries) RevokeAllUserSessions(ctx context.Context, userID pgtype.UUID) error {
+func (q *Queries) RevokeAllUserSessions(ctx context.Context, userID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, revokeAllUserSessions, userID)
 	return err
 }
@@ -105,7 +106,7 @@ WHERE id = $1
   AND revoked_at IS NULL
 `
 
-func (q *Queries) RevokeAuthSession(ctx context.Context, id pgtype.UUID) error {
+func (q *Queries) RevokeAuthSession(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, revokeAuthSession, id)
 	return err
 }
@@ -122,8 +123,8 @@ RETURNING id, user_id, refresh_token_hash, user_agent, ip_address, expires_at, r
 `
 
 type RotateAuthSessionParams struct {
-	ID               pgtype.UUID `json:"id"`
-	RefreshTokenHash string      `json:"refresh_token_hash"`
+	ID               uuid.UUID `json:"id"`
+	RefreshTokenHash string    `json:"refresh_token_hash"`
 }
 
 func (q *Queries) RotateAuthSession(ctx context.Context, arg RotateAuthSessionParams) (AuthSession, error) {

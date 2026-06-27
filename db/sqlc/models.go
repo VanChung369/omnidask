@@ -7,12 +7,13 @@ package sqlc
 import (
 	"net/netip"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type AuthSession struct {
-	ID               pgtype.UUID        `json:"id"`
-	UserID           pgtype.UUID        `json:"user_id"`
+	ID               uuid.UUID          `json:"id"`
+	UserID           uuid.UUID          `json:"user_id"`
 	RefreshTokenHash string             `json:"refresh_token_hash"`
 	UserAgent        pgtype.Text        `json:"user_agent"`
 	IpAddress        *netip.Addr        `json:"ip_address"`
@@ -23,7 +24,7 @@ type AuthSession struct {
 }
 
 type User struct {
-	ID           pgtype.UUID        `json:"id"`
+	ID           uuid.UUID          `json:"id"`
 	Email        string             `json:"email"`
 	DisplayName  string             `json:"display_name"`
 	PasswordHash string             `json:"password_hash"`
@@ -35,7 +36,7 @@ type User struct {
 }
 
 type Workspace struct {
-	ID        pgtype.UUID        `json:"id"`
+	ID        uuid.UUID          `json:"id"`
 	Name      string             `json:"name"`
 	Slug      string             `json:"slug"`
 	Timezone  string             `json:"timezone"`
@@ -44,9 +45,9 @@ type Workspace struct {
 }
 
 type WorkspaceMember struct {
-	ID          pgtype.UUID        `json:"id"`
-	WorkspaceID pgtype.UUID        `json:"workspace_id"`
-	UserID      pgtype.UUID        `json:"user_id"`
+	ID          uuid.UUID          `json:"id"`
+	WorkspaceID uuid.UUID          `json:"workspace_id"`
+	UserID      uuid.UUID          `json:"user_id"`
 	Role        string             `json:"role"`
 	Status      string             `json:"status"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
