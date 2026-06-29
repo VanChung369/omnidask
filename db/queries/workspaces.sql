@@ -5,9 +5,9 @@ INSERT INTO workspaces (
   timezone
 )
 VALUES (
-  $1,
-  $2,
-  $3
+  sqlc.arg(name),
+  sqlc.arg(slug),
+  sqlc.arg(timezone)
 )
 RETURNING
   id,
@@ -26,9 +26,9 @@ SELECT
   created_at,
   updated_at
 FROM workspaces
-WHERE id = $1;
+WHERE id = sqlc.arg(id);
 
 -- name: GetWorkspaceBySlug :one
 SELECT *
 FROM workspaces
-WHERE slug = $1;
+WHERE slug = sqlc.arg(slug);

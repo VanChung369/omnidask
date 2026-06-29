@@ -7,139 +7,133 @@ package sqlc
 
 import (
 	"context"
-	"net/netip"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createAuthSession = `-- name: CreateAuthSession :one
-INSERT INTO auth_sessions (
+INSERT INTO
+  auth_sessions (id, user_id, refresh_token_hash, expires_at)
+VALUES
+  (
+    $1,
+    $2,
+    $3,
+    $4
+  ) RETURNING id,
   user_id,
-  refresh_token_hash,
-  user_agent,
-  ip_address,
-  expires_at
-)
-VALUES (
-  $1,
-  $2,
-  $3,
-  $4,
-  $5
-)
-RETURNING id, user_id, refresh_token_hash, user_agent, ip_address, expires_at, revoked_at, last_used_at, created_at
+  expires_at,
+  created_at
 `
 
 type CreateAuthSessionParams struct {
+	SessionID        uuid.UUID          `json:"session_id"`
 	UserID           uuid.UUID          `json:"user_id"`
 	RefreshTokenHash string             `json:"refresh_token_hash"`
-	UserAgent        pgtype.Text        `json:"user_agent"`
-	IpAddress        *netip.Addr        `json:"ip_address"`
 	ExpiresAt        pgtype.Timestamptz `json:"expires_at"`
 }
 
-func (q *Queries) CreateAuthSession(ctx context.Context, arg CreateAuthSessionParams) (AuthSession, error) {
+type CreateAuthSessionRow struct {
+	ID        uuid.UUID          `json:"id"`
+	UserID    uuid.UUID          `json:"user_id"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) CreateAuthSession(ctx context.Context, arg CreateAuthSessionParams) (CreateAuthSessionRow, error) {
 	row := q.db.QueryRow(ctx, createAuthSession,
+		arg.SessionID,
 		arg.UserID,
 		arg.RefreshTokenHash,
-		arg.UserAgent,
-		arg.IpAddress,
 		arg.ExpiresAt,
 	)
-	var i AuthSession
+	var i CreateAuthSessionRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
-		&i.RefreshTokenHash,
-		&i.UserAgent,
-		&i.IpAddress,
 		&i.ExpiresAt,
-		&i.RevokedAt,
-		&i.LastUsedAt,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getActiveAuthSession = `-- name: GetActiveAuthSession :one
-SELECT id, user_id, refresh_token_hash, user_agent, ip_address, expires_at, revoked_at, last_used_at, created_at
-FROM auth_sessions
-WHERE id = $1
+SELECT
+  id,
+  user_id,
+  refresh_token_hash,
+  expires_at
+FROM
+  auth_sessions
+WHERE
+  id = $1
   AND revoked_at IS NULL
-  AND expires_at > now()
+  AND expires_at > now ()
 `
 
-func (q *Queries) GetActiveAuthSession(ctx context.Context, id uuid.UUID) (AuthSession, error) {
-	row := q.db.QueryRow(ctx, getActiveAuthSession, id)
-	var i AuthSession
+type GetActiveAuthSessionRow struct {
+	ID               uuid.UUID          `json:"id"`
+	UserID           uuid.UUID          `json:"user_id"`
+	RefreshTokenHash string             `json:"refresh_token_hash"`
+	ExpiresAt        pgtype.Timestamptz `json:"expires_at"`
+}
+
+func (q *Queries) GetActiveAuthSession(ctx context.Context, sessionID uuid.UUID) (GetActiveAuthSessionRow, error) {
+	row := q.db.QueryRow(ctx, getActiveAuthSession, sessionID)
+	var i GetActiveAuthSessionRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.RefreshTokenHash,
-		&i.UserAgent,
-		&i.IpAddress,
 		&i.ExpiresAt,
-		&i.RevokedAt,
-		&i.LastUsedAt,
-		&i.CreatedAt,
 	)
 	return i, err
 }
 
-const revokeAllUserSessions = `-- name: RevokeAllUserSessions :exec
-UPDATE auth_sessions
-SET revoked_at = now()
-WHERE user_id = $1
-  AND revoked_at IS NULL
-`
-
-func (q *Queries) RevokeAllUserSessions(ctx context.Context, userID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, revokeAllUserSessions, userID)
-	return err
-}
-
 const revokeAuthSession = `-- name: RevokeAuthSession :exec
 UPDATE auth_sessions
-SET revoked_at = now()
-WHERE id = $1
+SET
+  revoked_at = now ()
+WHERE
+  id = $1
   AND revoked_at IS NULL
 `
 
-func (q *Queries) RevokeAuthSession(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, revokeAuthSession, id)
+func (q *Queries) RevokeAuthSession(ctx context.Context, sessionID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, revokeAuthSession, sessionID)
 	return err
 }
 
 const rotateAuthSession = `-- name: RotateAuthSession :one
 UPDATE auth_sessions
 SET
-  refresh_token_hash = $2,
-  last_used_at = now()
-WHERE id = $1
+  refresh_token_hash = $1,
+  last_used_at = now ()
+WHERE
+  id = $2
+  AND refresh_token_hash = $3
   AND revoked_at IS NULL
-  AND expires_at > now()
-RETURNING id, user_id, refresh_token_hash, user_agent, ip_address, expires_at, revoked_at, last_used_at, created_at
+  AND expires_at > now () RETURNING id,
+  user_id,
+  expires_at
 `
 
 type RotateAuthSessionParams struct {
-	ID               uuid.UUID `json:"id"`
-	RefreshTokenHash string    `json:"refresh_token_hash"`
+	NewRefreshTokenHash     string    `json:"new_refresh_token_hash"`
+	SessionID               uuid.UUID `json:"session_id"`
+	CurrentRefreshTokenHash string    `json:"current_refresh_token_hash"`
 }
 
-func (q *Queries) RotateAuthSession(ctx context.Context, arg RotateAuthSessionParams) (AuthSession, error) {
-	row := q.db.QueryRow(ctx, rotateAuthSession, arg.ID, arg.RefreshTokenHash)
-	var i AuthSession
-	err := row.Scan(
-		&i.ID,
-		&i.UserID,
-		&i.RefreshTokenHash,
-		&i.UserAgent,
-		&i.IpAddress,
-		&i.ExpiresAt,
-		&i.RevokedAt,
-		&i.LastUsedAt,
-		&i.CreatedAt,
-	)
+type RotateAuthSessionRow struct {
+	ID        uuid.UUID          `json:"id"`
+	UserID    uuid.UUID          `json:"user_id"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+}
+
+func (q *Queries) RotateAuthSession(ctx context.Context, arg RotateAuthSessionParams) (RotateAuthSessionRow, error) {
+	row := q.db.QueryRow(ctx, rotateAuthSession, arg.NewRefreshTokenHash, arg.SessionID, arg.CurrentRefreshTokenHash)
+	var i RotateAuthSessionRow
+	err := row.Scan(&i.ID, &i.UserID, &i.ExpiresAt)
 	return i, err
 }
