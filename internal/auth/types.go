@@ -8,6 +8,11 @@ type RegisterRequest struct {
 	WorkspaceSlug string `json:"workspaceSlug"`
 }
 
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type UserResponse struct {
 	ID          string `json:"id"`
 	Email       string `json:"email"`
@@ -28,4 +33,22 @@ type RegisterResponse struct {
 	ExpiresIn   int64             `json:"expiresIn"`
 	User        UserResponse      `json:"user"`
 	Workspace   WorkspaceResponse `json:"workspace"`
+}
+
+type AuthResponse struct {
+	AccessToken string              `json:"accessToken"`
+	TokenType   string              `json:"tokenType"`
+	ExpiresIn   int64               `json:"expiresIn"`
+	User        UserResponse        `json:"user"`
+	Workspaces  []WorkspaceResponse `json:"workspaces"`
+}
+
+type MeResponse struct {
+	User       UserResponse        `json:"user"`
+	Workspaces []WorkspaceResponse `json:"workspaces"`
+}
+
+type AuthenticationResult struct {
+	Response     AuthResponse
+	RefreshToken string
 }

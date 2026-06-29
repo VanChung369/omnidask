@@ -81,3 +81,125 @@ func (q *Queries) CreateWorkspaceMember(ctx context.Context, arg CreateWorkspace
 	_, err := q.db.Exec(ctx, createWorkspaceMember, arg.WorkspaceID, arg.UserID, arg.Role)
 	return err
 }
+
+const getActiveUserByEmail = `-- name: GetActiveUserByEmail :one
+SELECT
+  id,
+  email::text AS email,
+  display_name,
+  password_hash,
+  status
+FROM users
+WHERE email = $1
+  AND status = 'active'
+`
+
+type GetActiveUserByEmailRow struct {
+	ID           uuid.UUID `json:"id"`
+	Email        string    `json:"email"`
+	DisplayName  string    `json:"display_name"`
+	PasswordHash string    `json:"password_hash"`
+	Status       string    `json:"status"`
+}
+
+func (q *Queries) GetActiveUserByEmail(ctx context.Context, email string) (GetActiveUserByEmailRow, error) {
+	row := q.db.QueryRow(ctx, getActiveUserByEmail, email)
+	var i GetActiveUserByEmailRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.DisplayName,
+		&i.PasswordHash,
+		&i.Status,
+	)
+	return i, err
+}
+
+const getActiveUserByID = `-- name: GetActiveUserByID :one
+SELECT
+  id,
+  email::text AS email,
+  display_name,
+  status
+FROM users
+WHERE id = $1
+  AND status = 'active'
+`
+
+type GetActiveUserByIDRow struct {
+	ID          uuid.UUID `json:"id"`
+	Email       string    `json:"email"`
+	DisplayName string    `json:"display_name"`
+	Status      string    `json:"status"`
+}
+
+func (q *Queries) GetActiveUserByID(ctx context.Context, id uuid.UUID) (GetActiveUserByIDRow, error) {
+	row := q.db.QueryRow(ctx, getActiveUserByID, id)
+	var i GetActiveUserByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.DisplayName,
+		&i.Status,
+	)
+	return i, err
+}
+
+const listUserWorkspaces = `-- name: ListUserWorkspaces :many
+SELECT
+  w.id,
+  w.name,
+  w.slug,
+  w.timezone,
+  wm.role
+FROM workspace_members wm
+JOIN workspaces w ON w.id = wm.workspace_id
+WHERE wm.user_id = $1
+  AND wm.status = 'active'
+ORDER BY w.created_at ASC
+`
+
+type ListUserWorkspacesRow struct {
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Slug     string    `json:"slug"`
+	Timezone string    `json:"timezone"`
+	Role     string    `json:"role"`
+}
+
+func (q *Queries) ListUserWorkspaces(ctx context.Context, userID uuid.UUID) ([]ListUserWorkspacesRow, error) {
+	rows, err := q.db.Query(ctx, listUserWorkspaces, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUserWorkspacesRow{}
+	for rows.Next() {
+		var i ListUserWorkspacesRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Slug,
+			&i.Timezone,
+			&i.Role,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateUserLastLogin = `-- name: UpdateUserLastLogin :exec
+UPDATE users
+SET last_login_at = now()
+WHERE id = $1
+`
+
+func (q *Queries) UpdateUserLastLogin(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, updateUserLastLogin, id)
+	return err
+}

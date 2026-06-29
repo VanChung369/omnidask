@@ -3,14 +3,26 @@ package auth
 import (
 	"context"
 	"fmt"
-	dbsqlc "omnidask/db/sqlc"
+	"time"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	dbsqlc "omnidask/db/sqlc"
 )
 
 type Repository struct {
 	pool    *pgxpool.Pool
 	queries *dbsqlc.Queries
+}
+
+type CreateSessionInput struct {
+	ID               uuid.UUID
+	UserID           uuid.UUID
+	RefreshTokenHash string
+	ExpiresAt        time.Time
 }
 
 type CreateRegistrationInput struct {
@@ -83,4 +95,97 @@ func (r *Repository) CreateRegistration(
 		User:      user,
 		Workspace: workspace,
 	}, nil
+}
+
+func (r *Repository) CreateLoginSession(
+	ctx context.Context,
+	input CreateSessionInput,
+) error {
+	tx, err := r.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
+	qtx := r.queries.WithTx(tx)
+
+	if _, err := qtx.CreateAuthSession(
+		ctx,
+		dbsqlc.CreateAuthSessionParams{
+			SessionID:        input.ID,
+			UserID:           input.UserID,
+			RefreshTokenHash: input.RefreshTokenHash,
+			ExpiresAt: pgtype.Timestamptz{
+				Time:  input.ExpiresAt,
+				Valid: true,
+			},
+		},
+	); err != nil {
+		return fmt.Errorf("create auth session: %w", err)
+	}
+
+	if err := qtx.UpdateUserLastLogin(ctx, input.UserID); err != nil {
+		return fmt.Errorf("update user last login: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("commit login session: %w", err)
+	}
+
+	return nil
+}
+
+func (r *Repository) GetUserForLogin(
+	ctx context.Context,
+	email string,
+) (dbsqlc.GetActiveUserByEmailRow, error) {
+	return r.queries.GetActiveUserByEmail(ctx, email)
+}
+
+func (r *Repository) GetUserForMe(
+	ctx context.Context,
+	userID uuid.UUID,
+) (dbsqlc.GetActiveUserByIDRow, error) {
+	return r.queries.GetActiveUserByID(ctx, userID)
+}
+
+func (r *Repository) ListUserWorkspaces(
+	ctx context.Context,
+	userID uuid.UUID,
+) ([]dbsqlc.ListUserWorkspacesRow, error) {
+	return r.queries.ListUserWorkspaces(ctx, userID)
+}
+
+func (r *Repository) GetActiveSession(
+	ctx context.Context,
+	sessionID uuid.UUID,
+) (dbsqlc.GetActiveAuthSessionRow, error) {
+	return r.queries.GetActiveAuthSession(ctx, sessionID)
+}
+
+func (r *Repository) RotateSession(
+	ctx context.Context,
+	sessionID uuid.UUID,
+	currentHash string,
+	newHash string,
+) error {
+	_, err := r.queries.RotateAuthSession(
+		ctx,
+		dbsqlc.RotateAuthSessionParams{
+			SessionID:               sessionID,
+			CurrentRefreshTokenHash: currentHash,
+			NewRefreshTokenHash:     newHash,
+		},
+	)
+
+	return err
+}
+
+func (r *Repository) RevokeSession(
+	ctx context.Context,
+	sessionID uuid.UUID,
+) error {
+	return r.queries.RevokeAuthSession(ctx, sessionID)
 }

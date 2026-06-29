@@ -52,6 +52,34 @@ func (m *TokenManager) Sign(userID uuid.UUID) (string, error) {
 	return signedToken, nil
 }
 
+func (m *TokenManager) ParseUserID(rawToken string) (uuid.UUID, error) {
+	claims := &Claims{}
+
+	token, err := jwt.ParseWithClaims(
+		rawToken,
+		claims,
+		func(token *jwt.Token) (any, error) {
+			return m.signingKey, nil
+		},
+		jwt.WithValidMethods([]string{
+			jwt.SigningMethodHS256.Alg(),
+		}),
+		jwt.WithIssuer(tokenIssuer),
+		jwt.WithAudience(tokenAudience),
+	)
+
+	if err != nil || !token.Valid {
+		return uuid.Nil, fmt.Errorf("invalid access token")
+	}
+
+	userID, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("invalid token subject")
+	}
+
+	return userID, nil
+}
+
 func (m *TokenManager) ExpiresInSeconds() int64 {
 	return int64(m.ttl.Seconds())
 }

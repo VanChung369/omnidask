@@ -11,6 +11,8 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	httxpmiddleware "omnidask/internal/platform/httpx/middleware"
 )
 
 const apiV1Prefix = "/api/v1"
@@ -27,11 +29,29 @@ func NewRouter(config Config, db *pgxpool.Pool) http.Handler {
 	)
 
 	authRepository := auth.NewRepository(db)
-	authService := auth.NewService(authRepository, tokenManager)
-	authHandler := auth.NewHandler(authService)
+	authService := auth.NewService(
+		authRepository,
+		tokenManager,
+		config.RefreshTokenTTL,
+	)
+
+	authHandler := auth.NewHandler(
+		authService,
+		auth.RefreshCookieConfig{
+			Secure: config.AppEnv == "production",
+			TTL:    config.RefreshTokenTTL,
+		},
+	)
+
+	router.Use(httxpmiddleware.CORS(config.WebOrigin))
 
 	router.Route(apiV1Prefix, func(api chi.Router) {
-		api.Route("/auth", authHandler.Routes)
+		api.Route("/auth", func(authRouter chi.Router) {
+			authHandler.Routes(
+				authRouter,
+				auth.RequireAccessToken(tokenManager),
+			)
+		})
 	})
 
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {

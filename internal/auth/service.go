@@ -2,19 +2,27 @@ package auth
 
 import (
 	"context"
+	"crypto/subtle"
 	"errors"
 	"fmt"
 	"net/mail"
 	"regexp"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+
+	dbsqlc "omnidask/db/sqlc"
 )
 
 var (
-	ErrValidation        = errors.New("validation error")
-	ErrEmailAlreadyTaken = errors.New("email already taken")
-	ErrSlugAlreadyTaken  = errors.New("workspace slug already taken")
+	ErrValidation         = errors.New("validation error")
+	ErrEmailAlreadyTaken  = errors.New("email already taken")
+	ErrSlugAlreadyTaken   = errors.New("workspace slug already taken")
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrInvalidSession     = errors.New("invalid session")
 )
 
 var workspaceSlugPattern = regexp.MustCompile(
@@ -22,17 +30,20 @@ var workspaceSlugPattern = regexp.MustCompile(
 )
 
 type Service struct {
-	repository   *Repository
-	tokenManager *TokenManager
+	repository      *Repository
+	tokenManager    *TokenManager
+	refreshTokenTTL time.Duration
 }
 
 func NewService(
 	repository *Repository,
 	tokenManager *TokenManager,
+	refreshTokenTTL time.Duration,
 ) *Service {
 	return &Service{
-		repository:   repository,
-		tokenManager: tokenManager,
+		repository:      repository,
+		tokenManager:    tokenManager,
+		refreshTokenTTL: refreshTokenTTL,
 	}
 }
 
@@ -90,6 +101,210 @@ func (s *Service) Register(
 			Role:     "owner",
 		},
 	}, nil
+}
+
+func (s *Service) Login(
+	ctx context.Context,
+	request LoginRequest,
+) (AuthenticationResult, error) {
+	request.Email = strings.ToLower(strings.TrimSpace(request.Email))
+
+	if request.Email == "" || request.Password == "" {
+		return AuthenticationResult{}, ErrInvalidCredentials
+	}
+
+	user, err := s.repository.GetUserForLogin(ctx, request.Email)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return AuthenticationResult{}, ErrInvalidCredentials
+		}
+
+		return AuthenticationResult{}, err
+	}
+
+	if err := VerifyPassword(user.PasswordHash, request.Password); err != nil {
+		return AuthenticationResult{}, ErrInvalidCredentials
+	}
+
+	refreshSecret, err := NewRefreshSecret()
+	if err != nil {
+		return AuthenticationResult{}, err
+	}
+
+	sessionID := uuid.New()
+
+	if err := s.repository.CreateLoginSession(
+		ctx,
+		CreateSessionInput{
+			ID:               sessionID,
+			UserID:           user.ID,
+			RefreshTokenHash: HashRefreshSecret(refreshSecret),
+			ExpiresAt:        time.Now().UTC().Add(s.refreshTokenTTL),
+		},
+	); err != nil {
+		return AuthenticationResult{}, err
+	}
+
+	return s.createAuthResult(
+		ctx,
+		user.ID,
+		UserResponse{
+			ID:          user.ID.String(),
+			Email:       user.Email,
+			DisplayName: user.DisplayName,
+		},
+		BuildRefreshCookieValue(sessionID, refreshSecret),
+	)
+}
+
+func (s *Service) Refresh(
+	ctx context.Context,
+	cookieValue string,
+) (AuthenticationResult, error) {
+	sessionID, refreshSecret, err := ParseRefreshCookieValue(cookieValue)
+	if err != nil {
+		return AuthenticationResult{}, ErrInvalidSession
+	}
+
+	session, err := s.repository.GetActiveSession(ctx, sessionID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return AuthenticationResult{}, ErrInvalidSession
+		}
+
+		return AuthenticationResult{}, err
+	}
+
+	currentHash := HashRefreshSecret(refreshSecret)
+
+	if subtle.ConstantTimeCompare(
+		[]byte(currentHash),
+		[]byte(session.RefreshTokenHash),
+	) != 1 {
+		_ = s.repository.RevokeSession(ctx, sessionID)
+		return AuthenticationResult{}, ErrInvalidSession
+	}
+
+	newRefreshSecret, err := NewRefreshSecret()
+	if err != nil {
+		return AuthenticationResult{}, err
+	}
+
+	if err := s.repository.RotateSession(
+		ctx,
+		sessionID,
+		currentHash,
+		HashRefreshSecret(newRefreshSecret),
+	); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			_ = s.repository.RevokeSession(ctx, sessionID)
+			return AuthenticationResult{}, ErrInvalidSession
+		}
+
+		return AuthenticationResult{}, err
+	}
+
+	user, err := s.repository.GetUserForMe(ctx, session.UserID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return AuthenticationResult{}, ErrInvalidSession
+		}
+
+		return AuthenticationResult{}, err
+	}
+
+	return s.createAuthResult(
+		ctx,
+		user.ID,
+		UserResponse{
+			ID:          user.ID.String(),
+			Email:       user.Email,
+			DisplayName: user.DisplayName,
+		},
+		BuildRefreshCookieValue(sessionID, newRefreshSecret),
+	)
+}
+
+func (s *Service) Logout(
+	ctx context.Context,
+	cookieValue string,
+) {
+	sessionID, _, err := ParseRefreshCookieValue(cookieValue)
+	if err != nil {
+		return
+	}
+
+	_ = s.repository.RevokeSession(ctx, sessionID)
+}
+
+func (s *Service) Me(
+	ctx context.Context,
+	userID uuid.UUID,
+) (MeResponse, error) {
+	user, err := s.repository.GetUserForMe(ctx, userID)
+	if err != nil {
+		return MeResponse{}, err
+	}
+
+	workspaces, err := s.repository.ListUserWorkspaces(ctx, userID)
+	if err != nil {
+		return MeResponse{}, err
+	}
+
+	return MeResponse{
+		User: UserResponse{
+			ID:          user.ID.String(),
+			Email:       user.Email,
+			DisplayName: user.DisplayName,
+		},
+		Workspaces: mapWorkspaces(workspaces),
+	}, nil
+}
+
+func (s *Service) createAuthResult(
+	ctx context.Context,
+	userID uuid.UUID,
+	user UserResponse,
+	refreshToken string,
+) (AuthenticationResult, error) {
+	accessToken, err := s.tokenManager.Sign(userID)
+	if err != nil {
+		return AuthenticationResult{}, err
+	}
+
+	workspaces, err := s.repository.ListUserWorkspaces(ctx, userID)
+	if err != nil {
+		return AuthenticationResult{}, err
+	}
+
+	return AuthenticationResult{
+		RefreshToken: refreshToken,
+		Response: AuthResponse{
+			AccessToken: accessToken,
+			TokenType:   "Bearer",
+			ExpiresIn:   s.tokenManager.ExpiresInSeconds(),
+			User:        user,
+			Workspaces:  mapWorkspaces(workspaces),
+		},
+	}, nil
+}
+
+func mapWorkspaces(
+	rows []dbsqlc.ListUserWorkspacesRow,
+) []WorkspaceResponse {
+	result := make([]WorkspaceResponse, 0, len(rows))
+
+	for _, row := range rows {
+		result = append(result, WorkspaceResponse{
+			ID:       row.ID.String(),
+			Name:     row.Name,
+			Slug:     row.Slug,
+			Timezone: row.Timezone,
+			Role:     row.Role,
+		})
+	}
+
+	return result
 }
 
 func validateRegisterRequest(request RegisterRequest) error {
