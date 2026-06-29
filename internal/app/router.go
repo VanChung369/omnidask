@@ -13,6 +13,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+const apiV1Prefix = "/api/v1"
+
 func NewRouter(config Config, db *pgxpool.Pool) http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
@@ -28,7 +30,9 @@ func NewRouter(config Config, db *pgxpool.Pool) http.Handler {
 	authService := auth.NewService(authRepository, tokenManager)
 	authHandler := auth.NewHandler(authService)
 
-	router.Route("/api/v1/auth", authHandler.Routes)
+	router.Route(apiV1Prefix, func(api chi.Router) {
+		api.Route("/auth", authHandler.Routes)
+	})
 
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteJSON(w, http.StatusOK, map[string]string{
