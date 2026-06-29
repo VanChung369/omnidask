@@ -10,7 +10,7 @@ build:
 	go build -o bin/server ./cmd/server
 
 sqlc:
-	sqlc generate
+	go run github.com/sqlc-dev/sqlc/cmd/sqlc@latest generate
 
 
 migrate-up:
