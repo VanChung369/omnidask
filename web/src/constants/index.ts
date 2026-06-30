@@ -1,8 +1,6 @@
 export const APP_NAME = "Omnidask";
 
 export const ROUTES = {
-  HOME: "/",
-  LOGIN: "/login",
-  REGISTER: "/register",
   DASHBOARD: "/dashboard",
+  LOGIN: "/login",
 } as const;
