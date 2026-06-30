@@ -11,7 +11,10 @@ interface LoginPageProps<T extends FieldValues> {
   onSubmit: SubmitHandler<T>;
 }
 
-export function LoginPage<T extends FieldValues>({ form, onSubmit }: LoginPageProps<T>) {
+export function LoginPage<T extends FieldValues>({
+  form,
+  onSubmit,
+}: LoginPageProps<T>) {
   return (
     <main className="auth-page">
       <section className="auth-panel">
@@ -29,23 +32,23 @@ export function LoginPage<T extends FieldValues>({ form, onSubmit }: LoginPagePr
         </div>
 
         <RHFForm form={form} onSubmit={onSubmit} className="auth-form">
-            <FieldGroup>
-              <RHFInput
-                name="email"
-                label="Email"
-                type="email"
-                autoComplete="email"
-              />
-              <RHFPasswordInput
-                name="password"
-                label="Password"
-                autoComplete="current-password"
-              />
-            </FieldGroup>
-            <Button type="submit" size="lg">
-              <LogIn data-icon="inline-start" />
-              Login
-            </Button>
+          <FieldGroup>
+            <RHFInput
+              name="email"
+              label="Email"
+              type="email"
+              autoComplete="email"
+            />
+            <RHFPasswordInput
+              name="password"
+              label="Password"
+              autoComplete="current-password"
+            />
+          </FieldGroup>
+          <Button type="submit" size="lg">
+            <LogIn data-icon="inline-start" />
+            Login
+          </Button>
         </RHFForm>
 
         <p className="auth-switch">
