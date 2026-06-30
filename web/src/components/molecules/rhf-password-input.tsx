@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/atoms/input";
 import { Button } from "@/components/atoms/button";
 import { ComponentProps } from "react";
+import { cn } from "@/lib/utils";
 
 interface RHFPasswordInputProps extends ComponentProps<typeof Input> {
   name: string;
@@ -19,7 +20,7 @@ interface RHFPasswordInputProps extends ComponentProps<typeof Input> {
   description?: string;
 }
 
-export function RHFPasswordInput({ name, label, description, ...props }: RHFPasswordInputProps) {
+export function RHFPasswordInput({ name, label, description, className, required, ...props }: RHFPasswordInputProps) {
   const { control } = useFormContext();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -29,14 +30,15 @@ export function RHFPasswordInput({ name, label, description, ...props }: RHFPass
       name={name}
       render={({ field }) => (
         <FormItem>
-          {label && <FormLabel>{label}</FormLabel>}
+          {label && <FormLabel required={required}>{label}</FormLabel>}
           <FormControl>
             <div className="relative">
               <Input
-                type={showPassword ? "text" : "password"}
-                className="pr-10"
                 {...field}
                 {...props}
+                required={required}
+                type={showPassword ? "text" : "password"}
+                className={cn("pr-10", className)}
               />
               <Button
                 type="button"

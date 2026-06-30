@@ -16,7 +16,7 @@ interface RHFInputProps extends ComponentProps<typeof Input> {
   description?: string;
 }
 
-export function RHFInput({ name, label, description, ...props }: RHFInputProps) {
+export function RHFInput({ name, label, description, required, ...props }: RHFInputProps) {
   const { control } = useFormContext();
 
   return (
@@ -25,9 +25,9 @@ export function RHFInput({ name, label, description, ...props }: RHFInputProps) 
       name={name}
       render={({ field }) => (
         <FormItem>
-          {label && <FormLabel>{label}</FormLabel>}
+          {label && <FormLabel required={required}>{label}</FormLabel>}
           <FormControl>
-            <Input {...field} {...props} />
+            <Input {...field} required={required} {...props} />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />

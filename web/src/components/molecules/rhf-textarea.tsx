@@ -16,7 +16,7 @@ interface RHFTextareaProps extends ComponentProps<typeof Textarea> {
   description?: string;
 }
 
-export function RHFTextarea({ name, label, description, ...props }: RHFTextareaProps) {
+export function RHFTextarea({ name, label, description, required, ...props }: RHFTextareaProps) {
   const { control } = useFormContext();
 
   return (
@@ -25,9 +25,9 @@ export function RHFTextarea({ name, label, description, ...props }: RHFTextareaP
       name={name}
       render={({ field }) => (
         <FormItem>
-          {label && <FormLabel>{label}</FormLabel>}
+          {label && <FormLabel required={required}>{label}</FormLabel>}
           <FormControl>
-            <Textarea {...field} {...props} />
+            <Textarea {...field} required={required} {...props} />
           </FormControl>
           {description && <FormDescription>{description}</FormDescription>}
           <FormMessage />
