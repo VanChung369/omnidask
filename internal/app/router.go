@@ -47,6 +47,12 @@ func NewRouter(config Config, db *pgxpool.Pool) http.Handler {
 
 	router.Route(apiV1Prefix, func(api chi.Router) {
 		api.Route("/auth", func(authRouter chi.Router) {
+			authRouter.Use(httxpmiddleware.RateLimit(
+				httxpmiddleware.RateLimitConfig{
+					MaxRequests: 5,
+					Window:      time.Minute,
+				},
+			))
 			authHandler.Routes(
 				authRouter,
 				auth.RequireAccessToken(tokenManager),
