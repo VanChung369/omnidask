@@ -4,6 +4,7 @@ import './index.css'
 import './lib/i18n'
 import App from './App'
 import { QueryProvider } from '@/providers/query-provider'
+import { ThemeProvider } from '@/providers/theme-provider'
 
 const rootElement = document.getElementById('root')
 
@@ -13,8 +14,10 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <QueryProvider>
-      <App />
-    </QueryProvider>
+    <ThemeProvider defaultTheme="system" storageKey="omnidask-theme">
+      <QueryProvider>
+        <App />
+      </QueryProvider>
+    </ThemeProvider>
   </StrictMode>,
 )
