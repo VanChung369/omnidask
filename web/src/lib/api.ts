@@ -1,5 +1,9 @@
 import axios from "axios";
-import type { AxiosError, InternalAxiosRequestConfig } from "axios";
+import type {
+  AxiosError,
+  AxiosRequestConfig,
+  InternalAxiosRequestConfig,
+} from "axios";
 
 export type ApiErrorResponse = {
   error?: string;
@@ -35,7 +39,53 @@ export function clearApiAccessToken() {
   accessToken = null;
 }
 
-export function isApiError(error: unknown): error is AxiosError<ApiErrorResponse> {
-  return axios.isAxiosError<ApiErrorResponse>(error);
+export async function get<TResponse>(url: string, config?: AxiosRequestConfig) {
+  const response = await api.get<TResponse>(url, config);
+  return response.data;
 }
 
+export async function post<TResponse, TBody = unknown>(
+  url: string,
+  data?: TBody,
+  config?: AxiosRequestConfig,
+) {
+  const response = await api.post<TResponse>(url, data, config);
+  return response.data;
+}
+
+export async function put<TResponse, TBody = unknown>(
+  url: string,
+  data?: TBody,
+  config?: AxiosRequestConfig,
+) {
+  const response = await api.put<TResponse>(url, data, config);
+  return response.data;
+}
+
+export async function patch<TResponse, TBody = unknown>(
+  url: string,
+  data?: TBody,
+  config?: AxiosRequestConfig,
+) {
+  const response = await api.patch<TResponse>(url, data, config);
+  return response.data;
+}
+
+export async function del<TResponse>(url: string, config?: AxiosRequestConfig) {
+  const response = await api.delete<TResponse>(url, config);
+  return response.data;
+}
+
+export const http = {
+  get,
+  post,
+  put,
+  patch,
+  delete: del,
+};
+
+export function isApiError(
+  error: unknown,
+): error is AxiosError<ApiErrorResponse> {
+  return axios.isAxiosError<ApiErrorResponse>(error);
+}
