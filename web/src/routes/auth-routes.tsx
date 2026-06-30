@@ -4,8 +4,9 @@ import {
   getPrivateRouteRedirect,
   getPublicOnlyRouteRedirect,
 } from "./route-guards";
+import { ROUTES } from "@/constants";
 
-const DEFAULT_AUTHENTICATED_PATH = "/dashboard";
+const DEFAULT_AUTHENTICATED_PATH = ROUTES.DASHBOARD;
 
 function useCurrentPath() {
   const location = useLocation();

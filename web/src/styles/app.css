@@ -145,29 +145,6 @@
   gap: 16px;
 }
 
-.auth-form label {
-  display: grid;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.auth-form input {
-  width: 100%;
-  min-height: 42px;
-  border: 1px solid var(--input);
-  border-radius: 8px;
-  background: var(--background);
-  color: var(--foreground);
-  padding: 0 12px;
-  font: inherit;
-}
-
-.auth-form input:focus {
-  border-color: var(--ring);
-  outline: 3px solid color-mix(in oklch, var(--ring), transparent 70%);
-}
-
 .auth-switch {
   color: var(--muted-foreground);
   margin: 0;

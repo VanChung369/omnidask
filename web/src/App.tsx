@@ -4,24 +4,25 @@ import { HomePage } from "@/components/pages/home-page";
 import { LoginPage } from "@/components/pages/login-page";
 import { RegisterPage } from "@/components/pages/register-page";
 import { PrivateRoute, PublicOnlyRoute } from "@/routes/auth-routes";
+import { ROUTES } from "@/constants";
 import "@/styles/app.css";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path={ROUTES.HOME} element={<HomePage />} />
 
         <Route element={<PublicOnlyRoute />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+          <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
         </Route>
 
         <Route element={<PrivateRoute />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to={ROUTES.HOME} replace />} />
       </Routes>
     </BrowserRouter>
   );

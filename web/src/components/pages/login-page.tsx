@@ -2,6 +2,8 @@ import { FormEvent } from "react";
 import { ArrowLeft, LogIn } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/atoms/button";
+import { Field, FieldGroup, FieldLabel } from "@/components/atoms/field";
+import { Input } from "@/components/atoms/input";
 import { useAuthStore } from "@/stores/use-auth-store";
 
 export function LoginPage() {
@@ -24,7 +26,7 @@ export function LoginPage() {
       <section className="auth-panel">
         <Button asChild variant="ghost" className="back-link">
           <Link to="/">
-            <ArrowLeft />
+            <ArrowLeft data-icon="inline-start" />
             Home
           </Link>
         </Button>
@@ -36,28 +38,32 @@ export function LoginPage() {
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          <label>
-            Email
-            <input
-              required
-              autoComplete="email"
-              defaultValue="demo@omnidask.local"
-              name="email"
-              type="email"
-            />
-          </label>
-          <label>
-            Password
-            <input
-              required
-              autoComplete="current-password"
-              defaultValue="password"
-              name="password"
-              type="password"
-            />
-          </label>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="login-email">Email</FieldLabel>
+              <Input
+                required
+                autoComplete="email"
+                defaultValue="demo@omnidask.local"
+                id="login-email"
+                name="email"
+                type="email"
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="login-password">Password</FieldLabel>
+              <Input
+                required
+                autoComplete="current-password"
+                defaultValue="password"
+                id="login-password"
+                name="password"
+                type="password"
+              />
+            </Field>
+          </FieldGroup>
           <Button type="submit" size="lg">
-            <LogIn />
+            <LogIn data-icon="inline-start" />
             Login
           </Button>
         </form>

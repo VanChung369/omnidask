@@ -2,6 +2,8 @@ import { FormEvent } from "react";
 import { ArrowLeft, UserPlus } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/atoms/button";
+import { Field, FieldGroup, FieldLabel } from "@/components/atoms/field";
+import { Input } from "@/components/atoms/input";
 import { useAuthStore } from "@/stores/use-auth-store";
 
 export function RegisterPage() {
@@ -23,7 +25,7 @@ export function RegisterPage() {
       <section className="auth-panel">
         <Button asChild variant="ghost" className="back-link">
           <Link to="/">
-            <ArrowLeft />
+            <ArrowLeft data-icon="inline-start" />
             Home
           </Link>
         </Button>
@@ -35,38 +37,43 @@ export function RegisterPage() {
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          <label>
-            Name
-            <input
-              required
-              autoComplete="name"
-              defaultValue="Demo User"
-              name="name"
-              type="text"
-            />
-          </label>
-          <label>
-            Email
-            <input
-              required
-              autoComplete="email"
-              defaultValue="demo@omnidask.local"
-              name="email"
-              type="email"
-            />
-          </label>
-          <label>
-            Password
-            <input
-              required
-              autoComplete="new-password"
-              defaultValue="password"
-              name="password"
-              type="password"
-            />
-          </label>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="register-name">Name</FieldLabel>
+              <Input
+                required
+                autoComplete="name"
+                defaultValue="Demo User"
+                id="register-name"
+                name="name"
+                type="text"
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="register-email">Email</FieldLabel>
+              <Input
+                required
+                autoComplete="email"
+                defaultValue="demo@omnidask.local"
+                id="register-email"
+                name="email"
+                type="email"
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="register-password">Password</FieldLabel>
+              <Input
+                required
+                autoComplete="new-password"
+                defaultValue="password"
+                id="register-password"
+                name="password"
+                type="password"
+              />
+            </Field>
+          </FieldGroup>
           <Button type="submit" size="lg">
-            <UserPlus />
+            <UserPlus data-icon="inline-start" />
             Create account
           </Button>
         </form>
