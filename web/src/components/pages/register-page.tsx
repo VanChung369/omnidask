@@ -1,30 +1,30 @@
-import { FormEvent } from "react";
 import { ArrowLeft, UserPlus } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import {
+  type FieldValues,
+  type SubmitHandler,
+  type UseFormReturn,
+} from "react-hook-form";
+
+import { ROUTES } from "@/constants";
 import { Button } from "@/components/atoms/button";
-import { Field, FieldGroup, FieldLabel } from "@/components/atoms/field";
-import { Input } from "@/components/atoms/input";
-import { useAuthStore } from "@/stores/use-auth-store";
+import { FieldGroup } from "@/components/atoms/field";
+import { RHFForm, RHFInput, RHFPasswordInput } from "@/components/molecules";
 
-export function RegisterPage() {
-  const register = useAuthStore((state) => state.register);
-  const navigate = useNavigate();
+interface RegisterPageProps<T extends FieldValues> {
+  form: UseFormReturn<T>;
+  onSubmit: SubmitHandler<T>;
+}
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const name = String(formData.get("name") || "");
-    const email = String(formData.get("email") || "");
-
-    register(name, email);
-    navigate("/dashboard", { replace: true });
-  }
-
+export function RegisterPage<T extends FieldValues>({
+  form,
+  onSubmit,
+}: RegisterPageProps<T>) {
   return (
     <main className="auth-page">
       <section className="auth-panel">
         <Button asChild variant="ghost" className="back-link">
-          <Link to="/">
+          <Link to={ROUTES.HOME}>
             <ArrowLeft data-icon="inline-start" />
             Home
           </Link>
@@ -36,50 +36,29 @@ export function RegisterPage() {
           <p>Register moves you straight into the private dashboard route.</p>
         </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <RHFForm form={form} onSubmit={onSubmit} className="auth-form">
           <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="register-name">Name</FieldLabel>
-              <Input
-                required
-                autoComplete="name"
-                defaultValue="Demo User"
-                id="register-name"
-                name="name"
-                type="text"
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="register-email">Email</FieldLabel>
-              <Input
-                required
-                autoComplete="email"
-                defaultValue="demo@omnidask.local"
-                id="register-email"
-                name="email"
-                type="email"
-              />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="register-password">Password</FieldLabel>
-              <Input
-                required
-                autoComplete="new-password"
-                defaultValue="password"
-                id="register-password"
-                name="password"
-                type="password"
-              />
-            </Field>
+            <RHFInput name="name" label="Name" autoComplete="name" />
+            <RHFInput
+              name="email"
+              label="Email"
+              type="email"
+              autoComplete="email"
+            />
+            <RHFPasswordInput
+              name="password"
+              label="Password"
+              autoComplete="new-password"
+            />
           </FieldGroup>
           <Button type="submit" size="lg">
             <UserPlus data-icon="inline-start" />
             Create account
           </Button>
-        </form>
+        </RHFForm>
 
         <p className="auth-switch">
-          Already have an account? <Link to="/login">Login</Link>
+          Already have an account? <Link to={ROUTES.LOGIN}>Login</Link>
         </p>
       </section>
     </main>

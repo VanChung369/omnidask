@@ -1,7 +1,8 @@
 import { FolderKanban, LogOut, ShieldCheck } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+
+import { ROUTES } from "@/constants";
 import { Button } from "@/components/atoms/button";
-import { useAuthStore } from "@/stores/use-auth-store";
 
 const stats = [
   { label: "Open tasks", value: "24" },
@@ -9,20 +10,19 @@ const stats = [
   { label: "Protected route", value: "on" },
 ];
 
-export function DashboardPage() {
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const navigate = useNavigate();
+interface DashboardPageProps {
+  user: {
+    name: string;
+    email: string;
+  } | null;
+  onLogout: () => void;
+}
 
-  function handleLogout() {
-    logout();
-    navigate("/", { replace: true });
-  }
-
+export function DashboardPage({ user, onLogout }: DashboardPageProps) {
   return (
     <main className="dashboard-page">
       <aside className="dashboard-sidebar">
-        <Link className="brand" to="/">
+        <Link className="brand" to={ROUTES.HOME}>
           Omnidask
         </Link>
         <nav aria-label="Dashboard navigation">
@@ -44,7 +44,7 @@ export function DashboardPage() {
             <h1>Welcome back, {user?.name ?? "User"}</h1>
             <p>{user?.email}</p>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
+          <Button variant="outline" onClick={onLogout}>
             <LogOut />
             Logout
           </Button>

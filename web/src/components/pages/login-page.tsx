@@ -1,7 +1,12 @@
 import { ArrowLeft, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
-import { UseFormReturn, SubmitHandler, FieldValues } from "react-hook-form";
+import {
+  type FieldValues,
+  type SubmitHandler,
+  type UseFormReturn,
+} from "react-hook-form";
 
+import { ROUTES } from "@/constants";
 import { Button } from "@/components/atoms/button";
 import { FieldGroup } from "@/components/atoms/field";
 import { RHFForm, RHFInput, RHFPasswordInput } from "@/components/molecules";
@@ -19,7 +24,7 @@ export function LoginPage<T extends FieldValues>({
     <main className="auth-page">
       <section className="auth-panel">
         <Button asChild variant="ghost" className="back-link">
-          <Link to="/">
+          <Link to={ROUTES.HOME}>
             <ArrowLeft data-icon="inline-start" />
             Home
           </Link>
@@ -52,7 +57,7 @@ export function LoginPage<T extends FieldValues>({
         </RHFForm>
 
         <p className="auth-switch">
-          New workspace? <Link to="/register">Create an account</Link>
+          New workspace? <Link to={ROUTES.REGISTER}>Create an account</Link>
         </p>
       </section>
     </main>

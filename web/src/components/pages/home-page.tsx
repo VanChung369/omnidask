@@ -1,21 +1,24 @@
 import { ArrowRight, LayoutDashboard, LockKeyhole } from "lucide-react";
 import { Link } from "react-router-dom";
+
+import { ROUTES } from "@/constants";
 import { Button } from "@/components/atoms/button";
-import { useAuthStore } from "@/stores/use-auth-store";
 
-export function HomePage() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+interface HomePageProps {
+  isAuthenticated: boolean;
+}
 
+export function HomePage({ isAuthenticated }: HomePageProps) {
   return (
     <main className="public-page">
       <nav className="site-nav" aria-label="Main navigation">
-        <Link className="brand" to="/">
+        <Link className="brand" to={ROUTES.HOME}>
           Omnidask
         </Link>
         <div className="nav-actions">
           {isAuthenticated ? (
             <Button asChild>
-              <Link to="/dashboard">
+              <Link to={ROUTES.DASHBOARD}>
                 <LayoutDashboard />
                 Dashboard
               </Link>
@@ -23,10 +26,10 @@ export function HomePage() {
           ) : (
             <>
               <Button asChild variant="ghost">
-                <Link to="/login">Login</Link>
+                <Link to={ROUTES.LOGIN}>Login</Link>
               </Button>
               <Button asChild>
-                <Link to="/register">
+                <Link to={ROUTES.REGISTER}>
                   <ArrowRight />
                   Start
                 </Link>
@@ -46,13 +49,15 @@ export function HomePage() {
           </p>
           <div className="hero-actions">
             <Button asChild size="lg">
-              <Link to={isAuthenticated ? "/dashboard" : "/register"}>
+              <Link
+                to={isAuthenticated ? ROUTES.DASHBOARD : ROUTES.REGISTER}
+              >
                 <ArrowRight />
                 {isAuthenticated ? "Open dashboard" : "Create workspace"}
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg">
-              <Link to="/login">
+              <Link to={ROUTES.LOGIN}>
                 <LockKeyhole />
                 Private route demo
               </Link>
