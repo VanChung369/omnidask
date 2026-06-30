@@ -1,15 +1,16 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './styles/index.css'
-import './lib/i18n'
-import App from './App'
-import { QueryProvider } from '@/providers/query-provider'
-import { ThemeProvider } from '@/providers/theme-provider'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./styles/index.css";
+import "./lib/i18n";
+import App from "./App";
+import { Toaster } from "@/components/ui/sonner";
+import { QueryProvider } from "@/providers/query-provider";
+import { ThemeProvider } from "@/providers/theme-provider";
 
-const rootElement = document.getElementById('root')
+const rootElement = document.getElementById("root");
 
 if (!rootElement) {
-  throw new Error('Root element not found')
+  throw new Error("Root element not found");
 }
 
 createRoot(rootElement).render(
@@ -18,6 +19,7 @@ createRoot(rootElement).render(
       <QueryProvider>
         <App />
       </QueryProvider>
+      <Toaster />
     </ThemeProvider>
   </StrictMode>,
-)
+);
