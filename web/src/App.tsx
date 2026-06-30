@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { DashboardPage } from "@/components/pages/dashboard-page";
 import { HomePage } from "@/components/pages/home-page";
-import { LoginPage } from "@/components/pages/login-page";
+import { LoginFeature } from "@/features/auth/login-feature";
 import { RegisterPage } from "@/components/pages/register-page";
 import { PrivateRoute, PublicOnlyRoute } from "@/routes/auth-routes";
 import { ROUTES } from "@/constants";
@@ -14,7 +14,7 @@ function App() {
         <Route path={ROUTES.HOME} element={<HomePage />} />
 
         <Route element={<PublicOnlyRoute />}>
-          <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+          <Route path={ROUTES.LOGIN} element={<LoginFeature />} />
           <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
         </Route>
 

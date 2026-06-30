@@ -1,26 +1,17 @@
-import { FormEvent } from "react";
 import { ArrowLeft, LogIn } from "lucide-react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { UseFormReturn, SubmitHandler, FieldValues } from "react-hook-form";
+
 import { Button } from "@/components/atoms/button";
-import { Field, FieldGroup, FieldLabel } from "@/components/atoms/field";
-import { Input } from "@/components/atoms/input";
-import { useAuthStore } from "@/stores/use-auth-store";
+import { FieldGroup } from "@/components/atoms/field";
+import { RHFForm, RHFInput, RHFPasswordInput } from "@/components/molecules";
 
-export function LoginPage() {
-  const login = useAuthStore((state) => state.login);
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+interface LoginPageProps<T extends FieldValues> {
+  form: UseFormReturn<T>;
+  onSubmit: SubmitHandler<T>;
+}
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") || "");
-
-    login(email);
-    navigate(redirectTo, { replace: true });
-  }
-
+export function LoginPage<T extends FieldValues>({ form, onSubmit }: LoginPageProps<T>) {
   return (
     <main className="auth-page">
       <section className="auth-panel">
@@ -37,36 +28,25 @@ export function LoginPage() {
           <p>Use any email to enter the protected dashboard in this demo.</p>
         </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="login-email">Email</FieldLabel>
-              <Input
-                required
-                autoComplete="email"
-                defaultValue="demo@omnidask.local"
-                id="login-email"
+        <RHFForm form={form} onSubmit={onSubmit} className="auth-form">
+            <FieldGroup>
+              <RHFInput
                 name="email"
+                label="Email"
                 type="email"
+                autoComplete="email"
               />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="login-password">Password</FieldLabel>
-              <Input
-                required
-                autoComplete="current-password"
-                defaultValue="password"
-                id="login-password"
+              <RHFPasswordInput
                 name="password"
-                type="password"
+                label="Password"
+                autoComplete="current-password"
               />
-            </Field>
-          </FieldGroup>
-          <Button type="submit" size="lg">
-            <LogIn data-icon="inline-start" />
-            Login
-          </Button>
-        </form>
+            </FieldGroup>
+            <Button type="submit" size="lg">
+              <LogIn data-icon="inline-start" />
+              Login
+            </Button>
+        </RHFForm>
 
         <p className="auth-switch">
           New workspace? <Link to="/register">Create an account</Link>
