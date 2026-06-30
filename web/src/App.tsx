@@ -4,7 +4,7 @@ import { HomePage } from "@/components/pages/home-page";
 import { LoginPage } from "@/components/pages/login-page";
 import { RegisterPage } from "@/components/pages/register-page";
 import { PrivateRoute, PublicOnlyRoute } from "@/routes/auth-routes";
-import "./App.css";
+import "@/styles/app.css";
 
 function App() {
   return (
