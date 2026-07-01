@@ -1,6 +1,6 @@
 export type AppRoute = {
   path: string;
-  title: string;
+  titleKey: string;
 };
 
 type PrivateRouteRedirectInput = {
@@ -14,13 +14,13 @@ type PublicOnlyRouteRedirectInput = {
 };
 
 export const publicRoutes: AppRoute[] = [
-  { path: "/", title: "Home" },
-  { path: "/login", title: "Login" },
-  { path: "/register", title: "Register" },
+  { path: "/", titleKey: "common.home" },
+  { path: "/login", titleKey: "common.login" },
+  { path: "/register", titleKey: "auth.login.createAccount" },
 ];
 
 export const privateRoutes: AppRoute[] = [
-  { path: "/dashboard", title: "Dashboard" },
+  { path: "/dashboard", titleKey: "common.dashboard" },
 ];
 
 export function getPrivateRouteRedirect(

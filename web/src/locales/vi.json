@@ -1,3 +1,56 @@
 {
-  "welcome": "Chào mừng đến với Omnidask"
+  "common": {
+    "appName": "Omnidask",
+    "home": "Trang chủ",
+    "login": "Đăng nhập",
+    "dashboard": "Bảng điều khiển",
+    "logout": "Đăng xuất",
+    "password": "Mật khẩu"
+  },
+  "auth": {
+    "login": {
+      "eyebrow": "Truy cập riêng tư",
+      "title": "Đăng nhập Omnidask",
+      "description": "Dùng tài khoản workspace của bạn để truy cập bảng điều khiển.",
+      "emailLabel": "Email",
+      "passwordLabel": "Mật khẩu",
+      "submitting": "Đang đăng nhập...",
+      "newWorkspace": "Workspace mới?",
+      "createAccount": "Tạo tài khoản",
+      "success": "Đăng nhập thành công",
+      "errorFallback": "Không thể đăng nhập. Vui lòng thử lại.",
+      "validation": {
+        "email": "Vui lòng nhập địa chỉ email hợp lệ",
+        "password": "Vui lòng nhập mật khẩu"
+      }
+    },
+    "password": {
+      "show": "Hiện mật khẩu",
+      "hide": "Ẩn mật khẩu"
+    },
+    "register": {
+      "validation": {
+        "name": "Vui lòng nhập tên",
+        "email": "Vui lòng nhập địa chỉ email hợp lệ",
+        "password": "Vui lòng nhập mật khẩu"
+      }
+    }
+  },
+  "home": {
+    "heroTitle": "Quản lý hỗ trợ workspace trong một bảng điều khiển tập trung.",
+    "heroDescription": "Theo dõi khách hàng, yêu cầu và luồng làm việc của đội ngũ trên một nền tảng workspace được bảo vệ.",
+    "openDashboard": "Mở bảng điều khiển",
+    "routesLabel": "Các route của ứng dụng",
+    "publicRoute": "Công khai",
+    "privateRoute": "Riêng tư"
+  },
+  "dashboard": {
+    "navLabel": "Điều hướng bảng điều khiển",
+    "eyebrow": "Workspace",
+    "welcome": "Chào mừng, {{name}}",
+    "fallbackUser": "Người dùng workspace",
+    "description": "Bảng điều khiển Omnidask được bảo vệ đã sẵn sàng.",
+    "authenticatedArea": "Khu vực đã xác thực",
+    "authenticatedDescription": "Màn hình này chỉ mở sau khi luồng đăng nhập lưu phiên hợp lệ."
+  }
 }

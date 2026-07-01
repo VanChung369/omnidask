@@ -18,9 +18,20 @@ interface RHFPasswordInputProps extends ComponentProps<typeof Input> {
   name: string;
   label?: string;
   description?: string;
+  showPasswordLabel: string;
+  hidePasswordLabel: string;
 }
 
-export function RHFPasswordInput({ name, label, description, className, required, ...props }: RHFPasswordInputProps) {
+export function RHFPasswordInput({
+  name,
+  label,
+  description,
+  className,
+  required,
+  showPasswordLabel,
+  hidePasswordLabel,
+  ...props
+}: RHFPasswordInputProps) {
   const { control } = useFormContext();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -54,7 +65,7 @@ export function RHFPasswordInput({ name, label, description, className, required
                   <Eye className="h-4 w-4 text-muted-foreground" />
                 )}
                 <span className="sr-only">
-                  {showPassword ? "Hide password" : "Show password"}
+                  {showPassword ? hidePasswordLabel : showPasswordLabel}
                 </span>
               </Button>
             </div>

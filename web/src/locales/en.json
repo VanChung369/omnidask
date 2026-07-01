@@ -1,3 +1,56 @@
 {
-  "welcome": "Welcome to Omnidask"
+  "common": {
+    "appName": "Omnidask",
+    "home": "Home",
+    "login": "Login",
+    "dashboard": "Dashboard",
+    "logout": "Logout",
+    "password": "Password"
+  },
+  "auth": {
+    "login": {
+      "eyebrow": "Private access",
+      "title": "Login to Omnidask",
+      "description": "Use your workspace credentials to access the dashboard.",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "submitting": "Logging in...",
+      "newWorkspace": "New workspace?",
+      "createAccount": "Create an account",
+      "success": "Login successful",
+      "errorFallback": "Unable to login. Please try again.",
+      "validation": {
+        "email": "Please enter a valid email address",
+        "password": "Please enter your password"
+      }
+    },
+    "password": {
+      "show": "Show password",
+      "hide": "Hide password"
+    },
+    "register": {
+      "validation": {
+        "name": "Please enter your name",
+        "email": "Please enter a valid email address",
+        "password": "Please enter your password"
+      }
+    }
+  },
+  "home": {
+    "heroTitle": "Run workspace support from one focused dashboard.",
+    "heroDescription": "Manage customers, requests, and team workflows with a simple protected workspace foundation.",
+    "openDashboard": "Open dashboard",
+    "routesLabel": "Application routes",
+    "publicRoute": "Public",
+    "privateRoute": "Private"
+  },
+  "dashboard": {
+    "navLabel": "Dashboard navigation",
+    "eyebrow": "Workspace",
+    "welcome": "Welcome, {{name}}",
+    "fallbackUser": "Workspace user",
+    "description": "Your protected Omnidask dashboard is ready.",
+    "authenticatedArea": "Authenticated area",
+    "authenticatedDescription": "This screen is only available after the login flow stores a valid session."
+  }
 }

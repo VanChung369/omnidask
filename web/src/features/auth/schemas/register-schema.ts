@@ -1,9 +1,23 @@
 import * as z from "zod";
 
-export const registerSchema = z.object({
-  name: z.string().min(1, { message: "Vui lòng nhập tên" }),
-  email: z.string().email({ message: "Vui lòng nhập địa chỉ email hợp lệ" }),
-  password: z.string().min(1, { message: "Vui lòng nhập mật khẩu" }),
-});
+type Translate = (key: string) => string;
 
-export type RegisterFormValues = z.infer<typeof registerSchema>;
+export function createRegisterSchema(t: Translate) {
+  return z.object({
+    name: z.string().min(1, {
+      message: t("auth.register.validation.name"),
+    }),
+    email: z.string().email({
+      message: t("auth.register.validation.email"),
+    }),
+    password: z.string().min(1, {
+      message: t("auth.register.validation.password"),
+    }),
+  });
+}
+
+export const registerSchema = createRegisterSchema((key) => key);
+
+export type RegisterFormValues = z.infer<
+  ReturnType<typeof createRegisterSchema>
+>;

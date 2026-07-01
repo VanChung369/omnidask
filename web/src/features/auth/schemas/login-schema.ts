@@ -1,8 +1,16 @@
 import * as z from "zod";
 
-export const loginSchema = z.object({
-  email: z.string().email({ message: "Vui lòng nhập địa chỉ email hợp lệ" }),
-  password: z.string().min(1, { message: "Vui lòng nhập mật khẩu" }),
-});
+type Translate = (key: string) => string;
 
-export type LoginFormValues = z.infer<typeof loginSchema>;
+export function createLoginSchema(t: Translate) {
+  return z.object({
+    email: z.string().email({ message: t("auth.login.validation.email") }),
+    password: z.string().min(1, {
+      message: t("auth.login.validation.password"),
+    }),
+  });
+}
+
+export const loginSchema = createLoginSchema((key) => key);
+
+export type LoginFormValues = z.infer<ReturnType<typeof createLoginSchema>>;

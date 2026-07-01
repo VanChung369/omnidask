@@ -145,6 +145,15 @@
   gap: 16px;
 }
 
+.auth-form-error {
+  border-radius: 6px;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  font-size: 14px;
+  margin: 0;
+  padding: 10px 12px;
+}
+
 .auth-switch {
   color: var(--muted-foreground);
   margin: 0;
