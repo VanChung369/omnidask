@@ -5,10 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
-import { ROUTES } from "@/constants";
-import { isApiError } from "@/lib/api";
-import { useAuthStore } from "@/stores/use-auth-store";
-import { LoginPage } from "@/components/pages/login-page";
+import { ROUTES } from "@/shared/constants";
+import { isApiError } from "@/shared/api/http";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { LoginPage } from "@/features/auth/ui/login-page";
 import { createLoginSchema, type LoginFormValues } from "./schemas/login-schema";
 import { useLoginMutation } from "./hooks/use-login-mutation";
 

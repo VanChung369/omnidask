@@ -1,7 +1,6 @@
 {
   "common": {
     "appName": "Omnidask",
-    "home": "Home",
     "login": "Login",
     "dashboard": "Dashboard",
     "logout": "Logout",
@@ -35,14 +34,6 @@
         "password": "Please enter your password"
       }
     }
-  },
-  "home": {
-    "heroTitle": "Run workspace support from one focused dashboard.",
-    "heroDescription": "Manage customers, requests, and team workflows with a simple protected workspace foundation.",
-    "openDashboard": "Open dashboard",
-    "routesLabel": "Application routes",
-    "publicRoute": "Public",
-    "privateRoute": "Private"
   },
   "dashboard": {
     "navLabel": "Dashboard navigation",

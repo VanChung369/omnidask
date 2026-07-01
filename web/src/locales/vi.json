@@ -1,7 +1,6 @@
 {
   "common": {
     "appName": "Omnidask",
-    "home": "Trang chủ",
     "login": "Đăng nhập",
     "dashboard": "Bảng điều khiển",
     "logout": "Đăng xuất",
@@ -35,14 +34,6 @@
         "password": "Vui lòng nhập mật khẩu"
       }
     }
-  },
-  "home": {
-    "heroTitle": "Quản lý hỗ trợ workspace trong một bảng điều khiển tập trung.",
-    "heroDescription": "Theo dõi khách hàng, yêu cầu và luồng làm việc của đội ngũ trên một nền tảng workspace được bảo vệ.",
-    "openDashboard": "Mở bảng điều khiển",
-    "routesLabel": "Các route của ứng dụng",
-    "publicRoute": "Công khai",
-    "privateRoute": "Riêng tư"
   },
   "dashboard": {
     "navLabel": "Điều hướng bảng điều khiển",

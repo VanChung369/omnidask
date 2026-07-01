@@ -4,7 +4,6 @@ import vi from "@/locales/vi.json";
 
 const requiredKeys = [
   "common.appName",
-  "common.home",
   "common.login",
   "common.dashboard",
   "common.logout",
@@ -26,12 +25,6 @@ const requiredKeys = [
   "auth.register.validation.name",
   "auth.register.validation.email",
   "auth.register.validation.password",
-  "home.heroTitle",
-  "home.heroDescription",
-  "home.openDashboard",
-  "home.routesLabel",
-  "home.publicRoute",
-  "home.privateRoute",
   "dashboard.navLabel",
   "dashboard.eyebrow",
   "dashboard.welcome",

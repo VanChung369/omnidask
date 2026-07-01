@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useAuthStore } from "@/stores/use-auth-store";
-import { clearApiAccessToken, setApiAccessToken } from "@/lib/api";
+import { useAuthStore } from "@/features/auth/store/auth.store";
+import { clearApiAccessToken, setApiAccessToken } from "@/shared/api/http";
 
-vi.mock("@/lib/api", () => ({
+vi.mock("@/shared/api/http", () => ({
   clearApiAccessToken: vi.fn(),
   setApiAccessToken: vi.fn(),
 }));
@@ -30,6 +30,7 @@ const authResponse = {
 describe("useAuthStore", () => {
   beforeEach(() => {
     useAuthStore.setState({
+      status: "anonymous",
       accessToken: null,
       user: null,
       workspaces: [],
@@ -43,6 +44,24 @@ describe("useAuthStore", () => {
     useAuthStore.getState().login(authResponse);
 
     expect(useAuthStore.getState()).toMatchObject({
+      status: "authenticated",
+      accessToken: "access-token",
+      user: authResponse.user,
+      workspaces: authResponse.workspaces,
+      isAuthenticated: true,
+    });
+    expect(setApiAccessToken).toHaveBeenCalledWith("access-token");
+  });
+
+  it("initializes a refreshed session without needing persisted storage", () => {
+    useAuthStore.getState().initialize({
+      accessToken: authResponse.accessToken,
+      user: authResponse.user,
+      workspaces: authResponse.workspaces,
+    });
+
+    expect(useAuthStore.getState()).toMatchObject({
+      status: "authenticated",
       accessToken: "access-token",
       user: authResponse.user,
       workspaces: authResponse.workspaces,
@@ -57,6 +76,20 @@ describe("useAuthStore", () => {
     useAuthStore.getState().logout();
 
     expect(useAuthStore.getState()).toMatchObject({
+      status: "anonymous",
+      accessToken: null,
+      user: null,
+      workspaces: [],
+      isAuthenticated: false,
+    });
+    expect(clearApiAccessToken).toHaveBeenCalledOnce();
+  });
+
+  it("marks the session anonymous when bootstrap cannot refresh", () => {
+    useAuthStore.getState().setAnonymous();
+
+    expect(useAuthStore.getState()).toMatchObject({
+      status: "anonymous",
       accessToken: null,
       user: null,
       workspaces: [],

@@ -4,23 +4,35 @@ import {
   getPublicOnlyRouteRedirect,
   privateRoutes,
   publicRoutes,
-} from "@/routes/route-guards";
+} from "@/app/guard-rules";
+import { ROUTES } from "@/shared/constants";
+import guardRulesSource from "../../src/app/guard-rules.ts?raw";
 
 describe("route guards", () => {
   it("defines public and private route groups", () => {
     expect(publicRoutes.map((route) => route.path)).toEqual([
-      "/",
-      "/login",
-      "/register",
+      ROUTES.LOGIN,
+      ROUTES.REGISTER,
     ]);
-    expect(privateRoutes.map((route) => route.path)).toEqual(["/dashboard"]);
+    expect(privateRoutes.map((route) => route.path)).toEqual([
+      ROUTES.DASHBOARD,
+    ]);
+  });
+
+  it("uses shared route constants when declaring route groups", () => {
+    expect(guardRulesSource).toContain("ROUTES.LOGIN");
+    expect(guardRulesSource).toContain("ROUTES.REGISTER");
+    expect(guardRulesSource).toContain("ROUTES.DASHBOARD");
+    expect(guardRulesSource).not.toContain('path: "/login"');
+    expect(guardRulesSource).not.toContain('path: "/register"');
+    expect(guardRulesSource).not.toContain('path: "/dashboard"');
   });
 
   it("redirects anonymous users from private routes to login", () => {
     expect(
       getPrivateRouteRedirect({
         isAuthenticated: false,
-        pathname: "/dashboard",
+        pathname: ROUTES.DASHBOARD,
       }),
     ).toBe("/login?redirectTo=%2Fdashboard");
   });
@@ -29,7 +41,7 @@ describe("route guards", () => {
     expect(
       getPrivateRouteRedirect({
         isAuthenticated: true,
-        pathname: "/dashboard",
+        pathname: ROUTES.DASHBOARD,
       }),
     ).toBeNull();
   });
@@ -38,16 +50,16 @@ describe("route guards", () => {
     expect(
       getPublicOnlyRouteRedirect({
         isAuthenticated: true,
-        fallbackPath: "/dashboard",
+        fallbackPath: ROUTES.DASHBOARD,
       }),
-    ).toBe("/dashboard");
+    ).toBe(ROUTES.DASHBOARD);
   });
 
   it("allows anonymous users on public-only auth pages", () => {
     expect(
       getPublicOnlyRouteRedirect({
         isAuthenticated: false,
-        fallbackPath: "/dashboard",
+        fallbackPath: ROUTES.DASHBOARD,
       }),
     ).toBeNull();
   });

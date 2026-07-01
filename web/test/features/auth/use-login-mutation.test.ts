@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { useMutation } from "@tanstack/react-query";
 import { useLoginMutation } from "@/features/auth/hooks/use-login-mutation";
-import { authService } from "@/services/auth-service";
+import { authService } from "@/features/auth/api/auth.api";
 
 vi.mock("@tanstack/react-query", () => ({
   useMutation: vi.fn((options) => options),
 }));
 
-vi.mock("@/services/auth-service", () => ({
+vi.mock("@/features/auth/api/auth.api", () => ({
   authService: {
     login: vi.fn(),
   },
