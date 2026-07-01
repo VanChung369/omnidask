@@ -7,66 +7,63 @@ import (
 
 	"omnidask/internal/auth"
 	"omnidask/internal/platform/httpx"
+	httpmiddleware "omnidask/internal/platform/httpx/middleware"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
-
-	httxpmiddleware "omnidask/internal/platform/httpx/middleware"
 )
 
 const apiV1Prefix = "/api/v1"
 
-func NewRouter(config Config, db *pgxpool.Pool) http.Handler {
+type RouterDependencies struct {
+	Config             Config
+	DB                 *pgxpool.Pool
+	AuthHandler        *auth.Handler
+	RequireAccessToken func(http.Handler) http.Handler
+}
+
+func NewRouter(deps RouterDependencies) http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Recoverer)
+	router.Use(httpmiddleware.CORS(deps.Config.WebOrigin))
 
-	tokenManager := auth.NewTokenManager(
-		config.JWTSecret,
-		config.AccessTokenTTL,
-	)
-
-	authRepository := auth.NewRepository(db)
-	authService := auth.NewService(
-		authRepository,
-		tokenManager,
-		config.RefreshTokenTTL,
-	)
-
-	authHandler := auth.NewHandler(
-		authService,
-		auth.RefreshCookieConfig{
-			Secure: config.AppEnv == "production",
-			TTL:    config.RefreshTokenTTL,
-		},
-	)
-
-	router.Use(httxpmiddleware.CORS(config.WebOrigin))
+	router.Get("/health", healthHandler)
+	router.Get("/ready", readyHandler(deps.DB))
 
 	router.Route(apiV1Prefix, func(api chi.Router) {
-		api.Route("/auth", func(authRouter chi.Router) {
-			authRouter.Use(httxpmiddleware.RateLimit(
-				httxpmiddleware.RateLimitConfig{
-					MaxRequests: 5,
-					Window:      time.Minute,
-				},
-			))
-			authHandler.Routes(
-				authRouter,
-				auth.RequireAccessToken(tokenManager),
-			)
-		})
+		mountAuthRoutes(api, deps)
 	})
 
-	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		httpx.WriteJSON(w, http.StatusOK, map[string]string{
-			"status": "ok",
-		})
-	})
+	return router
+}
 
-	router.Get("/ready", func(w http.ResponseWriter, r *http.Request) {
+func mountAuthRoutes(api chi.Router, deps RouterDependencies) {
+	api.Route("/auth", func(authRouter chi.Router) {
+		authRouter.Use(httpmiddleware.RateLimit(
+			httpmiddleware.RateLimitConfig{
+				MaxRequests: 5,
+				Window:      time.Minute,
+			},
+		))
+
+		deps.AuthHandler.Routes(
+			authRouter,
+			deps.RequireAccessToken,
+		)
+	})
+}
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{
+		"status": "ok",
+	})
+}
+
+func readyHandler(db *pgxpool.Pool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		pingCtx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 		defer cancel()
 
@@ -80,7 +77,5 @@ func NewRouter(config Config, db *pgxpool.Pool) http.Handler {
 		httpx.WriteJSON(w, http.StatusOK, map[string]string{
 			"status": "ready",
 		})
-	})
-
-	return router
+	}
 }

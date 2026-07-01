@@ -2,15 +2,12 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log/slog"
-	"net/http"
-	"omnidask/internal/app"
-	"omnidask/internal/platform/database"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
+
+	"omnidask/internal/app"
 )
 
 func main() {
@@ -19,57 +16,21 @@ func main() {
 		os.Interrupt,
 		syscall.SIGTERM,
 	)
-
 	defer stop()
 
-	config, err := app.LoadConfig()
-
+	application, err := app.Bootstrap(ctx)
 	if err != nil {
-		slog.Error("load config failed", "error", err)
-
+		slog.Error("bootstrap failed", "error", err)
 		os.Exit(1)
 	}
+	defer application.Close()
 
-	db, err := database.New(ctx, config.DatabaseURL)
+	slog.Info("server started", "address", application.Config.HTTPAddr)
 
-	if err != nil {
-		slog.Error("database connection failed", "error", err)
-		os.Exit(1)
-	}
-
-	defer db.Close()
-
-	router := app.NewRouter(config, db)
-
-	server := &http.Server{
-		Addr:              config.HTTPAddr,
-		Handler:           router,
-		ReadHeaderTimeout: 5 * time.Second,
-	}
-
-	serverErrors := make(chan error, 1)
-
-	go func() {
-		slog.Info("server started", "address", config.HTTPAddr)
-
-		err := server.ListenAndServe()
-		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			serverErrors <- err
-		}
-	}()
-
-	select {
-	case err := <-serverErrors:
+	if err := application.Server.Run(ctx); err != nil {
 		slog.Error("server failed", "error", err)
-
-	case <-ctx.Done():
-		slog.Info("shutdown signal received")
+		os.Exit(1)
 	}
 
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		slog.Error("graceful shutdown failed", "error", err)
-	}
+	slog.Info("shutdown complete")
 }
