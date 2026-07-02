@@ -6,8 +6,10 @@ import type {
 } from "axios";
 
 export type ApiErrorResponse = {
-  error?: string;
-  message?: string;
+  error?: {
+    code?: string;
+    message?: string;
+  };
 };
 
 const API_BASE_URL =

@@ -27,6 +27,7 @@ func NewRouter(deps RouterDependencies) http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
+	router.Use(httpmiddleware.RequestLogger)
 	router.Use(middleware.Recoverer)
 	router.Use(httpmiddleware.CORS(deps.Config.WebOrigin))
 

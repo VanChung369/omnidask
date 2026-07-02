@@ -17,11 +17,7 @@ import { useLoginMutation } from "./hooks/use-login-mutation";
 
 function getLoginErrorMessage(error: unknown, fallbackMessage: string) {
   if (isApiError(error)) {
-    return (
-      error.response?.data.message ||
-      error.response?.data.error ||
-      fallbackMessage
-    );
+    return error.response?.data.error?.message || fallbackMessage;
   }
 
   return fallbackMessage;

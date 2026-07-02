@@ -1,8 +1,8 @@
 import { useEffect, type ReactNode } from "react";
 
 import { authService } from "@/features/auth/api/auth.api";
+import { hasClientAuthSession } from "@/features/auth/session/auth-session-marker";
 import { useAuthStore } from "@/features/auth/store/auth.store";
-import { setApiAccessToken } from "@/shared/api/http";
 
 type AuthBootstrapProps = {
   children: ReactNode;
@@ -19,19 +19,21 @@ export function AuthBootstrap({ children }: AuthBootstrapProps) {
       return;
     }
 
+    if (!hasClientAuthSession()) {
+      setAnonymous();
+      return;
+    }
+
     didBootstrapAuth = true;
 
     async function bootstrapAuth() {
       try {
         const refreshedSession = await authService.refresh();
-        setApiAccessToken(refreshedSession.accessToken);
-
-        const currentSession = await authService.me();
 
         initialize({
           accessToken: refreshedSession.accessToken,
-          user: currentSession.user,
-          workspaces: currentSession.workspaces,
+          user: refreshedSession.user,
+          workspaces: refreshedSession.workspaces,
         });
       } catch {
         setAnonymous();

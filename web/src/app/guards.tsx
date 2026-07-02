@@ -33,16 +33,11 @@ export function PrivateRoute() {
 }
 
 export function PublicOnlyRoute() {
-  const status = useAuthStore((state) => state.status);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const redirect = getPublicOnlyRouteRedirect({
     isAuthenticated,
     fallbackPath: ROUTES.DASHBOARD,
   });
-
-  if (status === "booting") {
-    return null;
-  }
 
   if (redirect) {
     return <Navigate to={redirect} replace />;

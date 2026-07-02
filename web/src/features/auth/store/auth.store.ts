@@ -1,5 +1,10 @@
 import { create } from "zustand";
 import { clearApiAccessToken, setApiAccessToken } from "@/shared/api/http";
+import {
+  forgetClientAuthSession,
+  hasClientAuthSession,
+  rememberClientAuthSession,
+} from "../session/auth-session-marker";
 import type {
   AuthResponse,
   AuthSession,
@@ -29,13 +34,18 @@ const anonymousState = {
   isAuthenticated: false,
 };
 
+const initialStatus: AuthStatus = hasClientAuthSession()
+  ? "booting"
+  : "anonymous";
+
 export const useAuthStore = create<AuthStore>()((set) => ({
-  status: "booting",
+  status: initialStatus,
   accessToken: null,
   user: null,
   workspaces: [],
   isAuthenticated: false,
   initialize: (session) => {
+    rememberClientAuthSession();
     setApiAccessToken(session.accessToken);
     set({
       status: "authenticated",
@@ -46,6 +56,7 @@ export const useAuthStore = create<AuthStore>()((set) => ({
     });
   },
   login: (response) => {
+    rememberClientAuthSession();
     setApiAccessToken(response.accessToken);
     set({
       status: "authenticated",
@@ -56,10 +67,12 @@ export const useAuthStore = create<AuthStore>()((set) => ({
     });
   },
   setAnonymous: () => {
+    forgetClientAuthSession();
     clearApiAccessToken();
     set(anonymousState);
   },
   logout: () => {
+    forgetClientAuthSession();
     clearApiAccessToken();
     set(anonymousState);
   },

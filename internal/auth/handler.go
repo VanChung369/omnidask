@@ -3,6 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"omnidask/internal/platform/httpx"
@@ -91,16 +92,21 @@ func (h *Handler) Login(
 	var request LoginRequest
 
 	if !decodeJSON(w, r, &request) {
+		slog.Warn("auth login invalid request")
 		return
 	}
 
+	slog.Info("auth login attempt", "email", request.Email)
+
 	result, err := h.service.Login(r.Context(), request)
 	if err != nil {
+		slog.Warn("auth login failed", "email", request.Email, "error", err)
 		h.writeAuthError(w, err)
 		return
 	}
 
 	SetRefreshCookie(w, result.RefreshToken, h.cookieConfig)
+	slog.Info("auth login succeeded", "email", request.Email)
 	httpx.WriteJSON(w, http.StatusOK, result.Response)
 }
 
@@ -111,6 +117,7 @@ func (h *Handler) Refresh(
 	cookie, err := r.Cookie(refreshCookieName)
 	if err != nil {
 		ClearRefreshCookie(w, h.cookieConfig)
+		slog.Warn("auth refresh missing cookie")
 
 		httpx.WriteError(
 			w,
@@ -124,11 +131,13 @@ func (h *Handler) Refresh(
 	result, err := h.service.Refresh(r.Context(), cookie.Value)
 	if err != nil {
 		ClearRefreshCookie(w, h.cookieConfig)
+		slog.Warn("auth refresh failed", "error", err)
 		h.writeAuthError(w, err)
 		return
 	}
 
 	SetRefreshCookie(w, result.RefreshToken, h.cookieConfig)
+	slog.Info("auth refresh succeeded")
 	httpx.WriteJSON(w, http.StatusOK, result.Response)
 }
 
