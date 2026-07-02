@@ -9,7 +9,10 @@ import { ROUTES } from "@/shared/constants";
 import { isApiError } from "@/shared/api/http";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { LoginPage } from "@/features/auth/ui/login-page";
-import { createLoginSchema, type LoginFormValues } from "./schemas/login-schema";
+import {
+  createLoginSchema,
+  type LoginFormValues,
+} from "./schemas/login-schema";
 import { useLoginMutation } from "./hooks/use-login-mutation";
 
 function getLoginErrorMessage(error: unknown, fallbackMessage: string) {
@@ -48,8 +51,10 @@ export function LoginFeature() {
       toast.success(t("auth.login.success"));
       navigate(redirectTo, { replace: true });
     } catch (error) {
-      const message = getLoginErrorMessage(error, t("auth.login.errorFallback"));
-      form.setError("root", { message });
+      const message = getLoginErrorMessage(
+        error,
+        t("auth.login.errorFallback"),
+      );
       toast.error(message);
     }
   }

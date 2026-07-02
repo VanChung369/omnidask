@@ -26,7 +26,6 @@ export function LoginPage<T extends FieldValues>({
   isSubmitting = false,
 }: LoginPageProps<T>) {
   const { t } = useTranslation();
-  const rootError = form.formState.errors.root?.message;
 
   return (
     <main className="auth-page">
@@ -53,7 +52,6 @@ export function LoginPage<T extends FieldValues>({
               hidePasswordLabel={t("auth.password.hide")}
             />
           </FieldGroup>
-          {rootError && <p className="auth-form-error">{rootError}</p>}
           <Button type="submit" size="lg" disabled={isSubmitting}>
             <LogIn data-icon="inline-start" />
             {isSubmitting ? t("auth.login.submitting") : t("common.login")}
