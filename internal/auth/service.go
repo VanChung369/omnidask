@@ -50,7 +50,7 @@ func NewService(
 func (s *Service) Register(
 	ctx context.Context,
 	request RegisterRequest,
-) (RegisterResponse, error) {
+) (RegistrationAuthenticationResult, error) {
 	request.Email = strings.ToLower(strings.TrimSpace(request.Email))
 	request.DisplayName = strings.TrimSpace(request.DisplayName)
 	request.WorkspaceName = strings.TrimSpace(request.WorkspaceName)
@@ -59,46 +59,59 @@ func (s *Service) Register(
 	)
 
 	if err := validateRegisterRequest(request); err != nil {
-		return RegisterResponse{}, err
+		return RegistrationAuthenticationResult{}, err
 	}
 
 	passwordHash, err := HashPassword(request.Password)
 	if err != nil {
-		return RegisterResponse{}, fmt.Errorf("hash password: %w", err)
+		return RegistrationAuthenticationResult{}, fmt.Errorf("hash password: %w", err)
 	}
 
+	refreshSecret, err := NewRefreshSecret()
+	if err != nil {
+		return RegistrationAuthenticationResult{}, err
+	}
+
+	sessionID := uuid.New()
+
 	result, err := s.repository.CreateRegistration(ctx, CreateRegistrationInput{
-		Email:         request.Email,
-		DisplayName:   request.DisplayName,
-		PasswordHash:  passwordHash,
-		WorkspaceName: request.WorkspaceName,
-		WorkspaceSlug: request.WorkspaceSlug,
-		Timezone:      "Asia/Ho_Chi_Minh",
+		Email:            request.Email,
+		DisplayName:      request.DisplayName,
+		PasswordHash:     passwordHash,
+		WorkspaceName:    request.WorkspaceName,
+		WorkspaceSlug:    request.WorkspaceSlug,
+		Timezone:         "Asia/Ho_Chi_Minh",
+		SessionID:        sessionID,
+		RefreshTokenHash: HashRefreshSecret(refreshSecret),
+		SessionExpiresAt: time.Now().UTC().Add(s.refreshTokenTTL),
 	})
 	if err != nil {
-		return RegisterResponse{}, mapRegistrationError(err)
+		return RegistrationAuthenticationResult{}, mapRegistrationError(err)
 	}
 
 	accessToken, err := s.tokenManager.Sign(result.User.ID)
 	if err != nil {
-		return RegisterResponse{}, err
+		return RegistrationAuthenticationResult{}, err
 	}
 
-	return RegisterResponse{
-		AccessToken: accessToken,
-		TokenType:   "Bearer",
-		ExpiresIn:   s.tokenManager.ExpiresInSeconds(),
-		User: UserResponse{
-			ID:          result.User.ID.String(),
-			Email:       result.User.Email,
-			DisplayName: result.User.DisplayName,
-		},
-		Workspace: WorkspaceResponse{
-			ID:       result.Workspace.ID.String(),
-			Name:     result.Workspace.Name,
-			Slug:     result.Workspace.Slug,
-			Timezone: result.Workspace.Timezone,
-			Role:     "owner",
+	return RegistrationAuthenticationResult{
+		RefreshToken: BuildRefreshCookieValue(sessionID, refreshSecret),
+		Response: RegisterResponse{
+			AccessToken: accessToken,
+			TokenType:   "Bearer",
+			ExpiresIn:   s.tokenManager.ExpiresInSeconds(),
+			User: UserResponse{
+				ID:          result.User.ID.String(),
+				Email:       result.User.Email,
+				DisplayName: result.User.DisplayName,
+			},
+			Workspace: WorkspaceResponse{
+				ID:       result.Workspace.ID.String(),
+				Name:     result.Workspace.Name,
+				Slug:     result.Workspace.Slug,
+				Timezone: result.Workspace.Timezone,
+				Role:     "owner",
+			},
 		},
 	}, nil
 }

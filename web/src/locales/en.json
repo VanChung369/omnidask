@@ -28,10 +28,25 @@
       "hide": "Hide password"
     },
     "register": {
+      "eyebrow": "Start a workspace",
+      "title": "Create your Omnidask account",
+      "description": "Set up your owner account and first workspace.",
+      "displayNameLabel": "Your name",
+      "emailLabel": "Email",
+      "passwordLabel": "Password",
+      "workspaceNameLabel": "Workspace name",
+      "workspaceSlugLabel": "Workspace slug",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "success": "Account created",
+      "errorFallback": "Unable to create account. Please try again.",
       "validation": {
-        "name": "Please enter your name",
+        "displayName": "Your name must be 2-100 characters",
         "email": "Please enter a valid email address",
-        "password": "Please enter your password"
+        "password": "Password must have at least 12 characters",
+        "workspaceName": "Workspace name must be 2-100 characters",
+        "workspaceSlug": "Use lowercase letters, numbers, and hyphens"
       }
     }
   },

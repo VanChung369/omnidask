@@ -3,10 +3,18 @@ import { API_ENDPOINTS } from "@/shared/constants/api";
 import type {
   AuthResponse,
   LoginRequest,
+  RegisterRequest,
+  RegisterResponse,
   SessionResponse,
 } from "../types/auth.types";
 
 export const authService = {
+  register(payload: RegisterRequest) {
+    return http.post<RegisterResponse, RegisterRequest>(
+      API_ENDPOINTS.AUTH.REGISTER,
+      payload,
+    );
+  },
   login(payload: LoginRequest) {
     return http.post<AuthResponse, LoginRequest>(
       API_ENDPOINTS.AUTH.LOGIN,

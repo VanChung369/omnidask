@@ -91,3 +91,14 @@ export function isApiError(
 ): error is AxiosError<ApiErrorResponse> {
   return axios.isAxiosError<ApiErrorResponse>(error);
 }
+
+export function getApiErrorMessage(
+  error: unknown,
+  fallbackMessage: string,
+) {
+  if (isApiError(error)) {
+    return error.response?.data.error?.message || fallbackMessage;
+  }
+
+  return fallbackMessage;
+}

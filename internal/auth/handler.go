@@ -34,6 +34,7 @@ func (h *Handler) Register(
 	decoder.DisallowUnknownFields()
 
 	if err := decoder.Decode(&request); err != nil {
+		slog.Warn("auth register invalid request")
 		httpx.WriteError(
 			w,
 			http.StatusBadRequest,
@@ -43,8 +44,11 @@ func (h *Handler) Register(
 		return
 	}
 
-	response, err := h.service.Register(r.Context(), request)
+	slog.Info("auth register attempt", "email", request.Email)
+
+	result, err := h.service.Register(r.Context(), request)
 	if err != nil {
+		slog.Warn("auth register failed", "email", request.Email, "error", err)
 		switch {
 		case errors.Is(err, ErrValidation):
 			httpx.WriteError(
@@ -82,7 +86,9 @@ func (h *Handler) Register(
 		return
 	}
 
-	httpx.WriteJSON(w, http.StatusCreated, response)
+	SetRefreshCookie(w, result.RefreshToken, h.cookieConfig)
+	slog.Info("auth register succeeded", "email", request.Email)
+	httpx.WriteJSON(w, http.StatusCreated, result.Response)
 }
 
 func (h *Handler) Login(

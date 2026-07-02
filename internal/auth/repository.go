@@ -26,12 +26,15 @@ type CreateSessionInput struct {
 }
 
 type CreateRegistrationInput struct {
-	Email         string
-	DisplayName   string
-	PasswordHash  string
-	WorkspaceName string
-	WorkspaceSlug string
-	Timezone      string
+	Email            string
+	DisplayName      string
+	PasswordHash     string
+	WorkspaceName    string
+	WorkspaceSlug    string
+	Timezone         string
+	SessionID        uuid.UUID
+	RefreshTokenHash string
+	SessionExpiresAt time.Time
 }
 
 type RegistrationResult struct {
@@ -85,6 +88,25 @@ func (r *Repository) CreateRegistration(
 	})
 	if err != nil {
 		return RegistrationResult{}, fmt.Errorf("create workspace owner: %w", err)
+	}
+
+	if _, err := qtx.CreateAuthSession(
+		ctx,
+		dbsqlc.CreateAuthSessionParams{
+			SessionID:        input.SessionID,
+			UserID:           user.ID,
+			RefreshTokenHash: input.RefreshTokenHash,
+			ExpiresAt: pgtype.Timestamptz{
+				Time:  input.SessionExpiresAt,
+				Valid: true,
+			},
+		},
+	); err != nil {
+		return RegistrationResult{}, fmt.Errorf("create auth session: %w", err)
+	}
+
+	if err := qtx.UpdateUserLastLogin(ctx, user.ID); err != nil {
+		return RegistrationResult{}, fmt.Errorf("update user last login: %w", err)
 	}
 
 	if err := tx.Commit(ctx); err != nil {

@@ -5,8 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
+import { getApiErrorMessage } from "@/shared/api/http";
 import { ROUTES } from "@/shared/constants";
-import { isApiError } from "@/shared/api/http";
 import { useAuthStore } from "@/features/auth/store/auth.store";
 import { LoginPage } from "@/features/auth/ui/login-page";
 import {
@@ -14,14 +14,6 @@ import {
   type LoginFormValues,
 } from "./schemas/login-schema";
 import { useLoginMutation } from "./hooks/use-login-mutation";
-
-function getLoginErrorMessage(error: unknown, fallbackMessage: string) {
-  if (isApiError(error)) {
-    return error.response?.data.error?.message || fallbackMessage;
-  }
-
-  return fallbackMessage;
-}
 
 export function LoginFeature() {
   const { t } = useTranslation();
@@ -47,7 +39,7 @@ export function LoginFeature() {
       toast.success(t("auth.login.success"));
       navigate(redirectTo, { replace: true });
     } catch (error) {
-      const message = getLoginErrorMessage(
+      const message = getApiErrorMessage(
         error,
         t("auth.login.errorFallback"),
       );

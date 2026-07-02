@@ -3,6 +3,14 @@ export type LoginRequest = {
   password: string;
 };
 
+export type RegisterRequest = {
+  email: string;
+  password: string;
+  displayName: string;
+  workspaceName: string;
+  workspaceSlug: string;
+};
+
 export type AuthUser = {
   id: string;
   email: string;
@@ -23,6 +31,14 @@ export type AuthResponse = {
   expiresIn: number;
   user: AuthUser;
   workspaces: AuthWorkspace[];
+};
+
+export type RegisterResponse = {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  user: AuthUser;
+  workspace: AuthWorkspace;
 };
 
 export type AuthSession = {

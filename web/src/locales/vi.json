@@ -28,10 +28,25 @@
       "hide": "Ẩn mật khẩu"
     },
     "register": {
+      "eyebrow": "Tạo workspace",
+      "title": "Tạo tài khoản Omnidask",
+      "description": "Thiết lập tài khoản owner và workspace đầu tiên.",
+      "displayNameLabel": "Tên của bạn",
+      "emailLabel": "Email",
+      "passwordLabel": "Mật khẩu",
+      "workspaceNameLabel": "Tên workspace",
+      "workspaceSlugLabel": "Slug workspace",
+      "submit": "Tạo tài khoản",
+      "submitting": "Đang tạo tài khoản...",
+      "hasAccount": "Đã có tài khoản?",
+      "success": "Tạo tài khoản thành công",
+      "errorFallback": "Không thể tạo tài khoản. Vui lòng thử lại.",
       "validation": {
-        "name": "Vui lòng nhập tên",
+        "displayName": "Tên phải từ 2-100 ký tự",
         "email": "Vui lòng nhập địa chỉ email hợp lệ",
-        "password": "Vui lòng nhập mật khẩu"
+        "password": "Mật khẩu phải có ít nhất 12 ký tự",
+        "workspaceName": "Tên workspace phải từ 2-100 ký tự",
+        "workspaceSlug": "Chỉ dùng chữ thường, số và dấu gạch ngang"
       }
     }
   },

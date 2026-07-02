@@ -52,3 +52,8 @@ type AuthenticationResult struct {
 	Response     AuthResponse
 	RefreshToken string
 }
+
+type RegistrationAuthenticationResult struct {
+	Response     RegisterResponse
+	RefreshToken string
+}
